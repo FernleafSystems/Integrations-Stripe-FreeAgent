@@ -1,0 +1,30 @@
+{
+  "name":         "fernleafsystems/integrations-stripe-freeagent",
+  "description":  "Provides Integration between Stripe and FreeAgent",
+  "authors":      [
+	{
+	  "name":     "Paul Goodchild",
+	  "email":    "paul@paulgoodchild.me",
+	  "homepage": "https://paulgoodchild.me"
+	}
+  ],
+  "license":      "MIT",
+  "keywords":     [
+	"API Wrapper",
+	"FreeAgent"
+  ],
+  "repositories": [
+  ],
+  "require":      {
+	"php":                                   ">=5.6.0",
+	"fernleafsystems/apiwrappers-freeagent": "^0.0.3",
+	"stripe/stripe-php":                     "^5.0.0"
+  },
+  "require-dev":  {
+  },
+  "autoload":     {
+	"psr-4": {
+	  "FernleafSystems\\Integrations\\Stripe_Freeagent\\": "src"
+	}
+  }
+}
