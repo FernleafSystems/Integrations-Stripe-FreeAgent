@@ -4,6 +4,7 @@ namespace FernleafSystems\Integrations\Stripe_Freeagent;
 
 use FernleafSystems\ApiWrappers\Base\ConnectionConsumer;
 use FernleafSystems\ApiWrappers\Freeagent\Entities;
+use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\ContactVoConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
 
 /**
@@ -13,6 +14,7 @@ use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer
 class FindBillForStripePayout {
 
 	use ConnectionConsumer,
+		ContactVoConsumer,
 		StripePayoutConsumer;
 
 	/**
@@ -32,7 +34,7 @@ class FindBillForStripePayout {
 		if ( !empty( $oPayout->metadata[ 'ext_bill_id' ] ) ) {
 			$oBill = ( new Entities\Bills\Retrieve() )
 				->setConnection( $this->getConnection() )
-				->setEntityId( $oPayout->metadata[ 'ext_bill_id' ] )//TODO
+				->setEntityId( $oPayout->metadata[ 'ext_bill_id' ] )
 				->sendRequestWithVoResponse();
 			if ( empty( $oBill ) ) {
 				$oPayout->metadata[ 'ext_bill_id' ] = null;
@@ -62,14 +64,9 @@ class FindBillForStripePayout {
 	protected function findBillForStripePayout() {
 		$oPayout = $this->getStripePayout();
 
-		$oContact = ( new Entities\Contacts\Retrieve() )
-			->setConnection( $this->getConnection() )
-			->setEntityId( WebApp::instance()->config( 'accounting.freeagent.contacts.stripe' ) )
-			->sendRequestWithVoResponse();
-
 		$oBill = ( new Entities\Bills\Find() )
 			->setConnection( $this->getConnection() )
-			->setContact( $oContact )
+			->setContact( $this->getContactVo() )
 			->setDateRange( $oPayout->arrival_date, 5 )
 			->findByReference( $oPayout->id );
 		if ( empty( $oBill ) ) {

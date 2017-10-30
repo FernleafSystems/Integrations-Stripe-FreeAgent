@@ -7,27 +7,52 @@ use FernleafSystems\ApiWrappers\Freeagent\Entities\Bills\BillVO;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Bills\Create;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Contacts\ContactVO;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Contacts\Retrieve;
+use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\ContactVoConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
+use FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
 
 /**
  * Class CreateBillFromStripePayout
- * @package iControlWP\Integration\FreeAgent
+ * @property int stripe_bill_id
+ * @property int stripe_contact_id
+ * @package FernleafSystems\Integrations\Stripe_Freeagent
  */
 class CreateBillFromStripePayout {
 
 	use ConnectionConsumer,
-		StripePayoutConsumer;
+		ContactVoConsumer,
+		StripePayoutConsumer,
+		StdClassAdapter;
+
+	/**
+	 * @return int
+	 */
+	public function getStripeBillCategoryId() {
+		return $this->getNumericParam( 'stripe_bill_id' );
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getStripeContactId() {
+		return $this->getNumericParam( 'stripe_contact_id' );
+	}
 
 	/**
 	 * @return BillVO|null
 	 * @throws \Exception
 	 */
 	public function createBill() {
+
 		// Check to ensure the Stripe contact can be found
-		$this->verifyStripeContactExists();
+		if ( !( $this->getContactVo() instanceof ContactVO ) ) {
+			$this->setContactVo( $this->verifyStripeContactExists() );
+		}
+
 		$oBill = ( new FindBillForStripePayout() )
 			->setConnection( $this->getConnection() )
 			->setStripePayout( $this->getStripePayout() )
+			->setContactVo( $this->getContactVo() )
 			->find();
 		if ( empty( $oBill ) ) {
 			$oBill = $this->create();
@@ -53,18 +78,13 @@ class CreateBillFromStripePayout {
 			sprintf( 'Net Amount: %s %s', $sCurrency, round( $oPayout->amount/100, 2 ) )
 		);
 
-		$oContact = ( new Retrieve() )
-			->setConnection( $this->getConnection() )
-			->setEntityId( $oWebApp->config( 'accounting.freeagent.contacts.stripe' ) )
-			->sendRequestWithVoResponse();
-
 		$oBill = ( new Create() )
 			->setConnection( $this->getConnection() )
-			->setContact( $oContact )
+			->setContact( $this->getContactVo() )
 			->setReference( $oPayout->id )
 			->setDatedOn( $oPayout->arrival_date )
 			->setDueOn( $oPayout->arrival_date )
-			->setCategoryId( $oWebApp->config( 'accounting.freeagent.codes.stripe_bill_category' ) )
+			->setCategoryId( $this->getStripeBillCategoryId() )
 			->setComment( implode( "\n", $aComments ) )
 			->setTotalValue( $oPayout->summary->charge_fees/100 )
 			->setSalesTaxRate( 0 )
@@ -82,17 +102,32 @@ class CreateBillFromStripePayout {
 	}
 
 	/**
+	 * @param int $nStripeBillCategoryId
+	 * @return $this
+	 */
+	public function setStripeBillCategoryId( $nStripeBillCategoryId ) {
+		return $this->setParam( 'stripe_bill_id', $nStripeBillCategoryId );
+	}
+
+	/**
+	 * @param int $nStripeBillCategoryId
+	 * @return $this
+	 */
+	public function setStripeContactId( $nStripeBillCategoryId ) {
+		return $this->setParam( 'stripe_contact_id', $nStripeBillCategoryId );
+	}
+
+	/**
 	 * @return ContactVO|null
 	 * @throws \Exception
 	 */
 	protected function verifyStripeContactExists() {
-		$oAccounting = $this->getOAuthClient();
 		$oContact = ( new Retrieve() )
 			->setConnection( $this->getConnection() )
-			->setEntityId( WebApp::instance()->config( 'accounting.freeagent.contacts.stripe' ) )
+			->setEntityId( $this->getStripeContactId() )
 			->sendRequestWithVoResponse();
 		if ( empty( $oContact ) ) {
-			throw new \Exception( sprintf( 'Failed to find Stripe contact in FreeAgent: %s', $oAccounting->getLastRawResponse() ) );
+			throw new \Exception( sprintf( 'Failed to find Stripe contact in FreeAgent: "%s"', $this->getStripeContactId() ) );
 		}
 		if ( !preg_match( '#stripe#i', $oContact->getOrganisationName() ) ) {
 			throw new \Exception( 'The contact found in FreeAgent does not appear to be a Stripe contact' );

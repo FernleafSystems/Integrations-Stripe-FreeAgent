@@ -51,7 +51,7 @@ class FindBankTransactionForStripePayout {
 	}
 
 	/**
-	 * @return BankTransactionVO[]
+	 * @return Entities\BankTransactions\BankTransactionVO[]
 	 */
 	protected function getUnexplainedBankTxns() {
 		return ( new Find() )
