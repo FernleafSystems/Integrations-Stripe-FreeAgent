@@ -5,14 +5,17 @@ namespace FernleafSystems\Integrations\Stripe_Freeagent;
 use FernleafSystems\ApiWrappers\Base\ConnectionConsumer;
 use FernleafSystems\ApiWrappers\Freeagent\Entities;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
+use FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
 
 /**
  * Class FindBankTransactionForStripePayout
+ * @property Entities\BankAccounts\BankAccountVO $bank_account
  * @package iControlWP\Integration\FreeAgent
  */
 class FindBankTransactionForStripePayout {
 
 	use ConnectionConsumer,
+		StdClassAdapter,
 		StripePayoutConsumer;
 
 	/**
@@ -54,20 +57,28 @@ class FindBankTransactionForStripePayout {
 	 * @return Entities\BankTransactions\BankTransactionVO[]
 	 */
 	protected function getUnexplainedBankTxns() {
-		return ( new Find() )
+		/** @var Entities\BankTransactions\BankTransactionVO[] $aTxn */
+		$aTxn = ( new Entities\BankTransactions\Find() )
 			->setConnection( $this->getConnection() )
-			->setDateRange( $this->getStripePayout()->arrival_date, 7 )
+			->filterByDateRange( $this->getStripePayout()->arrival_date, 7 )
 			->setBankAccount( $this->getBankAccount() )
-			->setView( 'unexplained' )
-			->find();
+			->filterByUnexplained()
+			->all();
+		return $aTxn;
 	}
 
 	/**
 	 * @return Entities\BankAccounts\BankAccountVO|null
 	 */
-	protected function getBankAccount() {
-		return ( new GetBankAccountForPayout() )
-			->setOAuthClient( $this->getOAuthClient() )
-			->get( $this->getStripePayout() );
+	public function getBankAccount() {
+		return $this->getParam( 'bank_account' );
+	}
+
+	/**
+	 * @param Entities\BankAccounts\BankAccountVO $oBankAccount
+	 * @return $this
+	 */
+	public function setBankAccount( $oBankAccount ) {
+		return $this->setParam( 'bank_account', $oBankAccount );
 	}
 }

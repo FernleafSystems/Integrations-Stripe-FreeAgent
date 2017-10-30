@@ -64,11 +64,13 @@ class FindBillForStripePayout {
 	protected function findBillForStripePayout() {
 		$oPayout = $this->getStripePayout();
 
+		/** @var Entities\Bills\BillVO $oBill */
 		$oBill = ( new Entities\Bills\Find() )
 			->setConnection( $this->getConnection() )
-			->setContact( $this->getContactVo() )
-			->setDateRange( $oPayout->arrival_date, 5 )
-			->findByReference( $oPayout->id );
+			->filterByContact( $this->getContactVo() )
+			->filterByDateRange( $oPayout->arrival_date, 5 )
+			->filterByReference( $oPayout->id );
+
 		if ( empty( $oBill ) ) {
 			throw new \Exception( sprintf( 'Failed to find bill in FreeAgent for Payout transfer ID %s', $oPayout->id ) );
 		}

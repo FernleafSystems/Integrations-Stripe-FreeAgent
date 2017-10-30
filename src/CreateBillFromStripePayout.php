@@ -13,8 +13,8 @@ use FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
 
 /**
  * Class CreateBillFromStripePayout
- * @property int stripe_bill_id
- * @property int stripe_contact_id
+ * @property int $stripe_bill_id
+ * @property int $stripe_contact_id
  * @package FernleafSystems\Integrations\Stripe_Freeagent
  */
 class CreateBillFromStripePayout {
