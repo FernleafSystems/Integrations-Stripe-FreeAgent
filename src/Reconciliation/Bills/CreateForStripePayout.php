@@ -1,6 +1,6 @@
 <?php
 
-namespace FernleafSystems\Integrations\Stripe_Freeagent;
+namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bills;
 
 use FernleafSystems\ApiWrappers\Base\ConnectionConsumer;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Bills\BillVO;
@@ -9,20 +9,19 @@ use FernleafSystems\ApiWrappers\Freeagent\Entities\Contacts\ContactVO;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Contacts\Retrieve;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\ContactVoConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
+use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bills\FindForStripePayout;
 use FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
 
 /**
- * Class CreateBillFromStripePayout
- * @property int $stripe_bill_id
- * @property int $stripe_contact_id
- * @package FernleafSystems\Integrations\Stripe_Freeagent
+ * Class CreateForStripePayout
+ * @package FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bills
  */
-class CreateBillFromStripePayout {
+class CreateForStripePayout {
 
 	use ConnectionConsumer,
 		ContactVoConsumer,
-		StripePayoutConsumer,
-		StdClassAdapter;
+		StdClassAdapter,
+		StripePayoutConsumer;
 
 	/**
 	 * @return int
@@ -49,7 +48,7 @@ class CreateBillFromStripePayout {
 			$this->setContactVo( $this->verifyStripeContactExists() );
 		}
 
-		$oBill = ( new FindBillForStripePayout() )
+		$oBill = ( new FindForStripePayout() )
 			->setConnection( $this->getConnection() )
 			->setStripePayout( $this->getStripePayout() )
 			->setContactVo( $this->getContactVo() )

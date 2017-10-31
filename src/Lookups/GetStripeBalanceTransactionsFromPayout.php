@@ -1,11 +1,12 @@
 <?php
 
-namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation;
+namespace FernleafSystems\Integrations\Stripe_Freeagent\Lookups;
 
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\DataWrapper\StripeEventPayoutPaidSummary;
 use Stripe\BalanceTransaction;
 use Stripe\Charge;
+use Stripe\Collection;
 
 /**
  * Class GetBalanceTransactionsFromPayout
@@ -36,7 +37,7 @@ class GetStripeBalanceTransactionsFromPayout {
 			$nExpectedAmount += $oPayoutSummary->getAdjustmentFees();
 		}
 		if ( $oPayoutSummary->getAdjustmentGross() != 0 ) {
-			$nExpectedAmount += ( $oPayoutSummary->getAdjustmentGross() * -1 );
+			$nExpectedAmount += ( $oPayoutSummary->getAdjustmentGross()*-1 );
 		}
 
 		$bProcessRefunds = ( $oPayoutSummary->getRefundsGross() != 0 );
@@ -68,16 +69,16 @@ class GetStripeBalanceTransactionsFromPayout {
 	}
 
 	/**
-	 * @param array           $aParams
-	 * @return \Stripe\Collection
+	 * @param array $aParams
+	 * @return Collection
 	 */
 	protected function sendRequest( $aParams = array() ) {
 		$oPayout = $this->getStripePayout();
 		$aRequest = array_merge(
 			array(
 				'payout' => $oPayout->id,
-				'type'     => 'charge',
-				'limit'    => 20
+				'type'   => $this->getTransactionType(),
+				'limit'  => 20
 			),
 			$aParams
 		);

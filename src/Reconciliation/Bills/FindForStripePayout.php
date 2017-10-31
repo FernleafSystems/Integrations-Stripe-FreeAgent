@@ -1,6 +1,6 @@
 <?php
 
-namespace FernleafSystems\Integrations\Stripe_Freeagent;
+namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bills;
 
 use FernleafSystems\ApiWrappers\Base\ConnectionConsumer;
 use FernleafSystems\ApiWrappers\Freeagent\Entities;
@@ -8,10 +8,10 @@ use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\ContactVoConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
 
 /**
- * Class FindBillForStripePayout
- * @package iControlWP\Integration\FreeAgent
+ * Class FindForStripePayout
+ * @package FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bills
  */
-class FindBillForStripePayout {
+class FindForStripePayout {
 
 	use ConnectionConsumer,
 		ContactVoConsumer,

@@ -1,13 +1,13 @@
 <?php
 
-namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Base;
+namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Invoices;
 
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Invoices\InvoiceVO;
 use FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
 use Stripe\BalanceTransaction;
 use Stripe\Charge;
 
-class ItemToReconcile {
+class InvoicesPartsToReconcileVO {
 
 	use StdClassAdapter;
 

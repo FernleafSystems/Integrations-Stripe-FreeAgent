@@ -1,12 +1,12 @@
 <?php
 
-namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation;
+namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Invoices;
 
 use FernleafSystems\ApiWrappers\Base\ConnectionConsumer;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Invoices\Find;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Invoices\InvoiceVO;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
-use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Base\ItemToReconcile;
+use FernleafSystems\Integrations\Stripe_Freeagent\Lookups\GetStripeBalanceTransactionsFromPayout;
 use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\Edd\BridgeInterface;
 use Stripe\Charge;
 
@@ -28,7 +28,7 @@ class InvoicesVerify {
 	/**
 	 * Will return a collection of all invoices to be reconciled, or null if there
 	 * was a problem during the verification process.
-	 * @return ItemToReconcile[]
+	 * @return InvoicesPartsToReconcileVO[]
 	 * @throws \Exception
 	 */
 	public function run() {
@@ -64,7 +64,7 @@ class InvoicesVerify {
 			}
 
 			if ( !is_null( $oInvoiceToReconcile ) ) {
-				$aInvoicesToReconcile[] = ( new ItemToReconcile() )
+				$aInvoicesToReconcile[] = ( new InvoicesPartsToReconcileVO() )
 					->setFreeagentInvoice( $oInvoiceToReconcile )
 					->setStripeBalanceTransaction( $oBalTxn )
 					->setStripeCharge( Charge::retrieve( $oBalTxn->source ) );

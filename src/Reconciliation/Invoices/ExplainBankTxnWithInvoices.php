@@ -1,6 +1,6 @@
 <?php
 
-namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation;
+namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Invoices;
 
 use FernleafSystems\ApiWrappers\Base\ConnectionConsumer;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\BankAccounts\BankAccountVO;
@@ -8,7 +8,6 @@ use FernleafSystems\ApiWrappers\Freeagent\Entities\BankTransactionExplanation\Cr
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\BankTransactionVoConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\BridgeConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
-use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Base\ItemToReconcile;
 
 class ExplainBankTxnWithInvoices {
 
@@ -18,7 +17,7 @@ class ExplainBankTxnWithInvoices {
 		StripePayoutConsumer;
 
 	/**
-	 * @param ItemToReconcile[] $aInvoicesToReconcile
+	 * @param InvoicesPartsToReconcileVO[] $aInvoicesToReconcile
 	 */
 	public function run( $aInvoicesToReconcile ) {
 

@@ -6,6 +6,8 @@ use FernleafSystems\ApiWrappers\Base\ConnectionConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\BankTransactionVoConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\BridgeConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
+use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Invoices\ExplainBankTxnWithInvoices;
+use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Invoices\InvoicesVerify;
 
 /**
  * Verifies all invoices associated with the payout are present and accurate within Freeagent
