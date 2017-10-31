@@ -23,11 +23,11 @@ trait BankTransactionVoConsumer {
 	}
 
 	/**
-	 * @param BankTransactionVO $oContact
+	 * @param BankTransactionVO $oVo
 	 * @return $this
 	 */
-	public function setBankTransactionVo( $oContact ) {
-		$this->oFreeagentBankTransactionVO = $oContact;
+	public function setBankTransactionVo( $oVo ) {
+		$this->oFreeagentBankTransactionVO = $oVo;
 		return $this;
 	}
 }

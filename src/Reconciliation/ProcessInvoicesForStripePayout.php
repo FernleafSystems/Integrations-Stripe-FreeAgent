@@ -15,7 +15,7 @@ use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Invoices\Invoic
  * Class StripeChargesWithFreeagentTransaction
  * @package iControlWP\Integration\FreeAgent\Reconciliation
  */
-class ProcessStripePayout {
+class ProcessInvoicesForStripePayout {
 
 	use BankTransactionVoConsumer,
 		BridgeConsumer,
@@ -27,7 +27,7 @@ class ProcessStripePayout {
 	 */
 	public function process() {
 
-		$aReconData = ( new InvoicesVerify() )
+		$aReconInvoiceData = ( new InvoicesVerify() )
 			->setConnection( $this->getConnection() )
 			->setStripePayout( $this->getStripePayout() )
 			->setBridge( $this->getBridge() )
@@ -38,6 +38,6 @@ class ProcessStripePayout {
 			->setStripePayout( $this->getStripePayout() )
 			->setBridge( $this->getBridge() )
 			->setBankTransactionVo( $this->getBankTransactionVo() )
-			->run( $aReconData );
+			->run( $aReconInvoiceData );
 	}
 }

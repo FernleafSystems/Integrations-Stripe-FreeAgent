@@ -23,11 +23,11 @@ trait ContactVoConsumer {
 	}
 
 	/**
-	 * @param ContactVO $oContact
+	 * @param ContactVO $oVo
 	 * @return $this
 	 */
-	public function setContactVo( $oContact ) {
-		$this->oFreeagentContactVO = $oContact;
+	public function setContactVo( $oVo ) {
+		$this->oFreeagentContactVO = $oVo;
 		return $this;
 	}
 }

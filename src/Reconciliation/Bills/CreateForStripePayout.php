@@ -9,7 +9,6 @@ use FernleafSystems\ApiWrappers\Freeagent\Entities\Contacts\ContactVO;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Contacts\Retrieve;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\ContactVoConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
-use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bills\FindForStripePayout;
 use FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
 
 /**
@@ -22,20 +21,6 @@ class CreateForStripePayout {
 		ContactVoConsumer,
 		StdClassAdapter,
 		StripePayoutConsumer;
-
-	/**
-	 * @return int
-	 */
-	public function getStripeBillCategoryId() {
-		return $this->getNumericParam( 'stripe_bill_id' );
-	}
-
-	/**
-	 * @return int
-	 */
-	public function getStripeContactId() {
-		return $this->getNumericParam( 'stripe_contact_id' );
-	}
 
 	/**
 	 * @return BillVO|null
@@ -98,6 +83,20 @@ class CreateForStripePayout {
 		$oPayout->save();
 
 		return $oBill;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getStripeBillCategoryId() {
+		return $this->getNumericParam( 'stripe_bill_id' );
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getStripeContactId() {
+		return $this->getNumericParam( 'stripe_contact_id' );
 	}
 
 	/**

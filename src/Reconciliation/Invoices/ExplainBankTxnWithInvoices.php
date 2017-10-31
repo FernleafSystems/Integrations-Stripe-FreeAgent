@@ -41,7 +41,7 @@ class ExplainBankTxnWithInvoices {
 				if ( strcasecmp( $oCharge->currency, $oBalTxn->currency ) != 0 ) { //foreign currency converted by Stripe
 					$oCreator->setForeignCurrencyValue( $oCharge->amount );
 				}
-				$oExplanation = $oCreator->create();
+				$oCreator->create();
 			}
 			catch ( \Exception $oE ) {
 				continue;
