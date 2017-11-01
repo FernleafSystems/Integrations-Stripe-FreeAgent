@@ -4,6 +4,7 @@ namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\BankTrans
 
 use FernleafSystems\ApiWrappers\Base\ConnectionConsumer;
 use FernleafSystems\ApiWrappers\Freeagent\Entities;
+use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\BankAccountVoConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
 use FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
 
@@ -13,7 +14,8 @@ use FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
  */
 class FindForStripePayout {
 
-	use ConnectionConsumer,
+	use BankAccountVoConsumer,
+		ConnectionConsumer,
 		StdClassAdapter,
 		StripePayoutConsumer;
 
@@ -60,24 +62,9 @@ class FindForStripePayout {
 		$aTxn = ( new Entities\BankTransactions\Find() )
 			->setConnection( $this->getConnection() )
 			->filterByDateRange( $this->getStripePayout()->arrival_date, 7 )
-			->setBankAccount( $this->getBankAccount() )
+			->setBankAccount( $this->getBankAccountVo() )
 			->filterByUnexplained()
 			->all();
 		return $aTxn;
-	}
-
-	/**
-	 * @return Entities\BankAccounts\BankAccountVO|null
-	 */
-	public function getBankAccount() {
-		return $this->getParam( 'bank_account' );
-	}
-
-	/**
-	 * @param Entities\BankAccounts\BankAccountVO $oBankAccount
-	 * @return $this
-	 */
-	public function setBankAccount( $oBankAccount ) {
-		return $this->setParam( 'bank_account', $oBankAccount );
 	}
 }
