@@ -16,21 +16,29 @@ class FreeagentConfigVO {
 	 * @return int
 	 */
 	public function getBankAccountIdEur() {
-		return $this->getNumericParam( 'bank_account_id_eur' );
+		return $this->getBankAccountIdForCurrency( 'eur' );
 	}
 
 	/**
 	 * @return int
 	 */
 	public function getBankAccountIdGbp() {
-		return $this->getNumericParam( 'bank_account_id_gbp' );
+		return $this->getBankAccountIdForCurrency( 'gbp' );
 	}
 
 	/**
 	 * @return int
 	 */
 	public function getBankAccountIdUsd() {
-		return $this->getNumericParam( 'bank_account_id_usd' );
+		return $this->getBankAccountIdForCurrency( 'usd' );
+	}
+
+	/**
+	 * @param string $sCurrency
+	 * @return int
+	 */
+	public function getBankAccountIdForCurrency( $sCurrency ) {
+		return $this->getNumericParam( 'bank_account_id_'.strtolower( $sCurrency ) );
 	}
 
 	/**
@@ -83,6 +91,15 @@ class FreeagentConfigVO {
 	 */
 	public function setBankAccountIdUsd( $nVal ) {
 		return $this->setParam( 'bank_account_id_usd', $nVal );
+	}
+
+	/**
+	 * @param string $sCurrency
+	 * @param int $nVal
+	 * @return $this
+	 */
+	public function setBankAccountIdForCurrency( $sCurrency, $nVal ) {
+		return $this->setParam( 'bank_account_id_'.strtolower( $sCurrency ), $nVal );
 	}
 
 	/**
