@@ -5,6 +5,7 @@ namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation;
 use FernleafSystems\ApiWrappers\Base\ConnectionConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\BankTransactionVoConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\BridgeConsumer;
+use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\FreeagentConfigVoConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Invoices\ExplainBankTxnWithInvoices;
 use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Invoices\InvoicesVerify;
@@ -19,6 +20,7 @@ class ProcessInvoicesForStripePayout {
 
 	use BankTransactionVoConsumer,
 		BridgeConsumer,
+		FreeagentConfigVoConsumer,
 		ConnectionConsumer,
 		StripePayoutConsumer;
 

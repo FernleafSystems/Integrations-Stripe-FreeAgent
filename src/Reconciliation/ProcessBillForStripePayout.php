@@ -9,6 +9,7 @@ use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\BankAccountVoConsume
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\BankTransactionVoConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\BridgeConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\ContactVoConsumer;
+use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\FreeagentConfigVoConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bills\CreateForStripePayout;
 use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bills\ExplainBankTxnWithStripeBill;
@@ -24,6 +25,7 @@ class ProcessBillForStripePayout {
 		BridgeConsumer,
 		ContactVoConsumer,
 		ConnectionConsumer,
+		FreeagentConfigVoConsumer,
 		StripePayoutConsumer;
 
 	/**
