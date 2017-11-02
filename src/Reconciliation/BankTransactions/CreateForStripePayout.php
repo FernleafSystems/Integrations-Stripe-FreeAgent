@@ -35,6 +35,7 @@ class CreateForStripePayout {
 
 		$oBankTxn = null;
 		if ( $bSuccess ) {
+			sleep( 2 ); // to be extra sure it properly exists when we now try to find it.
 			$oBankTxn = ( new FindForStripePayout() )
 				->setConnection( $this->getConnection() )
 				->setBankAccountVo( $this->getBankAccountVo() )
