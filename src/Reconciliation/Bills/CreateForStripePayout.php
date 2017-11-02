@@ -10,7 +10,6 @@ use FernleafSystems\ApiWrappers\Freeagent\Entities\Contacts\Retrieve;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\ContactVoConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
 use FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
-use Stripe\BalanceTransaction;
 
 /**
  * Class CreateForStripePayout
