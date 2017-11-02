@@ -24,14 +24,23 @@ class CreateForStripePayout {
 	public function create() {
 		$oPayout = $this->getStripePayout();
 		/** @var BankTransactionVO $oBankTxn */
-		$oBankTxn = ( new Create() )
+		$bSuccess = ( new Create() )
 			->setConnection( $this->getConnection() )
 			->create(
 				$this->getBankAccountVo(),
 				$oPayout->arrival_date,
-				$oPayout->amount / 100,
+				$oPayout->amount/100,
 				sprintf( 'Automatically create bank transaction for Stripe Payout %s', $oPayout->id )
 			);
+
+		$oBankTxn = null;
+		if ( $bSuccess ) {
+			$oBankTxn = ( new FindForStripePayout() )
+				->setConnection( $this->getConnection() )
+				->setBankAccountVo( $this->getBankAccountVo() )
+				->setStripePayout( $oPayout )
+				->find();
+		}
 		return $oBankTxn;
 	}
 }
