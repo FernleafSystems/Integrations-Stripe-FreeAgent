@@ -46,7 +46,7 @@ class ExplainBankTxnWithForeignBill {
 			->setConnection( $this->getConnection() )
 			->setBankAccount( $this->getBankAccountVo() )
 			->setBillPaid( $oBill )
-			->setValue( $oBill->getAmountTotal(), false )
+			->setValue( $oBill->getAmountTotal() )
 			->setDatedOn( $oBill->getDatedOn() )
 			->create();
 		if ( empty( $oExplanation ) ) {
@@ -66,7 +66,7 @@ class ExplainBankTxnWithForeignBill {
 			->setConnection( $this->getConnection() )
 			->setBankTxn( $this->getBankTransactionVo() )
 			->setTargetBankAccount( $this->getBankAccountVo() )
-			->setValue( $oBill->getAmountTotal(), true )
+			->setValue( -1 * $oBill->getAmountTotal() ) // -1 as it's leaving the account
 			->create();
 		if ( empty( $oBankTransferExplanationTxn ) ) {
 			throw new \Exception( 'Failed to explain bank transfer transaction in FreeAgent.' );
