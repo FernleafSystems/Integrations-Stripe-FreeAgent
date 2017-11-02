@@ -15,6 +15,7 @@ class EddPaymentToFreeagentInvoice {
 	use ConnectionConsumer,
 		ContactVoConsumer;
 	const KEY_FREEAGENT_INVOICE_ID = 'freeagent_invoice_id';
+
 	/**
 	 * @var \EDD_Payment
 	 */
@@ -63,7 +64,22 @@ class EddPaymentToFreeagentInvoice {
 
 		$oInvoice = $oCreateInvoice->create();
 		$oPayment->update_meta( self::KEY_FREEAGENT_INVOICE_ID, $oInvoice->getId() );
-		return $oInvoice;
+		return $this->markInvoiceAsSent( $oInvoice );
+	}
+
+	/**
+	 * @param Entities\Invoices\InvoiceVO $oInvoice
+	 * @return Entities\Invoices\InvoiceVO
+	 */
+	protected function markInvoiceAsSent( $oInvoice ) {
+		( new Entities\Invoices\MarkAs() )
+			->setConnection( $this->getConnection() )
+			->setEntityId( $oInvoice->getId() )
+			->sent();
+		return ( new Entities\Invoices\Retrieve() )
+			->setConnection( $this->getConnection() )
+			->setEntityId( $oInvoice->getId() )
+			->sendRequestWithVoResponse();
 	}
 
 	/**
