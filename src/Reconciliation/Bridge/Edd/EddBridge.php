@@ -117,7 +117,8 @@ class EddBridge implements BridgeInterface {
 	 */
 	public function getFreeagentInvoiceIdFromStripeBalanceTxn( $oStripeTxn ) {
 		return $this->getFreeagentInvoiceIdFromEddPayment(
-			$this->getEddPaymentFromStripeBalanceTxn( $oStripeTxn ) );
+			$this->getEddPaymentFromStripeBalanceTxn( $oStripeTxn )
+		);
 	}
 
 	/**
@@ -125,6 +126,7 @@ class EddBridge implements BridgeInterface {
 	 * @return bool
 	 */
 	public function verifyStripeToInternalPaymentLink( $oStripeTxn ) {
-		return !is_null( $this->getInternalSubscriptionsForStripeTxn( $oStripeTxn ) );
+		$aSub = $this->getInternalSubscriptionsForStripeTxn( $oStripeTxn );
+		return !empty( $aSub );
 	}
 }
