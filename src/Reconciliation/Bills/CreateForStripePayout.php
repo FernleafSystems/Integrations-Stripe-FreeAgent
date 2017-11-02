@@ -10,6 +10,7 @@ use FernleafSystems\ApiWrappers\Freeagent\Entities\Contacts\Retrieve;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\ContactVoConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
 use FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
+use Stripe\BalanceTransaction;
 
 /**
  * Class CreateForStripePayout
@@ -54,11 +55,15 @@ class CreateForStripePayout {
 		$oPayout = $this->getStripePayout();
 
 		$sCurrency = strtoupper( $oPayout->currency );
+
+		$nTotalFees = ( new CountTotalFeesForStripePayout() )
+			->setStripePayout( $oPayout )
+			->count();
+
 		$aComments = array(
 			sprintf( 'Bill for Stripe Payout: https://dashboard.stripe.com/payouts/%s', $oPayout->id ),
-			sprintf( 'Total Charges Count: %s', $oPayout->summary->charge_count ),
-			sprintf( 'Gross Amount: %s %s', $sCurrency, round( $oPayout->summary->charge_gross/100, 2 ) ),
-			sprintf( 'Fees Total: %s %s', $sCurrency, round( $oPayout->summary->charge_fees/100, 2 ) ),
+			sprintf( 'Gross Amount: %s %s', $sCurrency, $oPayout->amount ),
+			sprintf( 'Fees Total: %s %s', $sCurrency, $nTotalFees/100 ),
 			sprintf( 'Net Amount: %s %s', $sCurrency, round( $oPayout->amount/100, 2 ) )
 		);
 
@@ -70,7 +75,7 @@ class CreateForStripePayout {
 			->setDueOn( $oPayout->arrival_date )
 			->setCategoryId( $this->getStripeBillCategoryId() )
 			->setComment( implode( "\n", $aComments ) )
-			->setTotalValue( $oPayout->summary->charge_fees/100 )
+			->setTotalValue( $nTotalFees/100 )
 			->setSalesTaxRate( 0 )
 			->setEcStatus( 'EC Services' )
 			->create();
@@ -89,7 +94,7 @@ class CreateForStripePayout {
 	 * @return int
 	 */
 	public function getStripeBillCategoryId() {
-		return $this->getNumericParam( 'stripe_bill_id' );
+		return $this->getNumericParam( 'stripe_bill_id', 101 );
 	}
 
 	/**

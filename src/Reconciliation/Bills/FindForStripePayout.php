@@ -43,7 +43,6 @@ class FindForStripePayout {
 		}
 
 		if ( empty( $oBill ) ) {
-
 			try {
 				$oBill = $this->findBillForStripePayout();
 				$oPayout->metadata[ 'ext_bill_id' ] = $oBill->getId();

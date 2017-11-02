@@ -12,7 +12,6 @@ use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer
 /**
  * Retrieve the Stripe Bill within FreeAgent, and the associated Bank Transaction
  * for the Payout and creates a FreeAgent Explanation for it.
- *
  * Class ExplainBankTxnWithStripeBill
  * @package FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bills
  */
@@ -22,7 +21,6 @@ class ExplainBankTxnWithStripeBill {
 		BankTransactionVoConsumer,
 		StripePayoutConsumer,
 		ConnectionConsumer;
-
 	const DEFAULT_NATIVE_CURRENCY = 'GBP';
 
 	/**
@@ -40,7 +38,7 @@ class ExplainBankTxnWithStripeBill {
 	public function process( $oBill ) {
 		if ( $oBill->getAmountDue() > 0 ) {
 
-			if ( strcmp( $this->getStripePayout()->currency, $this->getNativeCurrency() ) == 0 ) {
+			if ( strcasecmp( $this->getStripePayout()->currency, $this->getNativeCurrency() ) == 0 ) {
 				$this->createSimpleExplanation( $oBill );
 			}
 			else {
@@ -64,6 +62,7 @@ class ExplainBankTxnWithStripeBill {
 	public function createSimpleExplanation( $oBill ) {
 
 		$oBankTxnExp = ( new Create() )
+			->setConnection( $this->getConnection() )
 			->setBankTxn( $this->getBankTransactionVo() )
 			->setBillPaid( $oBill )
 			->setValue( $oBill->getAmountTotal() )
