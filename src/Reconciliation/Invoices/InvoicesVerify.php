@@ -7,7 +7,7 @@ use FernleafSystems\ApiWrappers\Freeagent\Entities\Invoices\Find;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Invoices\InvoiceVO;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Lookups\GetStripeBalanceTransactionsFromPayout;
-use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\Edd\BridgeInterface;
+use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\BridgeInterface;
 use Stripe\Charge;
 
 class InvoicesVerify {

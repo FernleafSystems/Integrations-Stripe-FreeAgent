@@ -5,6 +5,7 @@ namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\Ed
 use FernleafSystems\ApiWrappers\Base\ConnectionConsumer;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Contacts\ContactVO;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Invoices\InvoiceVO;
+use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\BridgeInterface;
 use Stripe\BalanceTransaction;
 
 class EddBridge implements BridgeInterface {

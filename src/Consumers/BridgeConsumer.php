@@ -2,7 +2,7 @@
 
 namespace FernleafSystems\Integrations\Stripe_Freeagent\Consumers;
 
-use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\Edd\BridgeInterface;
+use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\BridgeInterface;
 
 /**
  * Trait BridgeConsumer
