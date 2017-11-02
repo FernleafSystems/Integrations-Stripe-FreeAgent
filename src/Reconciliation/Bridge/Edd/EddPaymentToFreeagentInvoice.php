@@ -64,6 +64,7 @@ class EddPaymentToFreeagentInvoice {
 
 		$oInvoice = $oCreateInvoice->create();
 		$oPayment->update_meta( self::KEY_FREEAGENT_INVOICE_ID, $oInvoice->getId() );
+		sleep( 1 );
 		return $this->markInvoiceAsSent( $oInvoice );
 	}
 

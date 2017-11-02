@@ -53,20 +53,20 @@ class InvoicesVerify {
 			}
 
 			$nFreeagentInvoiceId = $oBridge->getFreeagentInvoiceIdFromStripeBalanceTxn( $oBalTxn );
-			if ( empty( $nFreeagentInvoiceId ) ) {
-				// No Invoice, so we create it.
-				$oNewInvoice = $oBridge->createFreeagentInvoice( $oBalTxn );
-				if ( !empty( $oNewInvoice ) ) {
-					$oInvoiceToReconcile = $oNewInvoice;
-				}
-			}
-			else {
+			if ( !empty( $nFreeagentInvoiceId ) ) {
 				// Verify we've been able to load it.
 				foreach ( $aFreeagentInvoicesPool as $oInvoice ) {
 					if ( $nFreeagentInvoiceId == $oInvoice->getId() ) {
 						$oInvoiceToReconcile = $oInvoice;
 						break;
 					}
+				}
+			}
+
+			if ( is_null( $oInvoiceToReconcile ) ) { // No Invoice, so we create it.
+				$oNewInvoice = $oBridge->createFreeagentInvoice( $oBalTxn );
+				if ( !empty( $oNewInvoice ) ) {
+					$oInvoiceToReconcile = $oNewInvoice;
 				}
 			}
 
