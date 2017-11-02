@@ -10,7 +10,7 @@ interface BridgeInterface {
 
 	/**
 	 * @param BalanceTransaction $oBalTxn
-	 * @param bool $bUpdateOnly
+	 * @param bool               $bUpdateOnly
 	 * @return ContactVO
 	 */
 	public function createFreeagentContact( $oBalTxn, $bUpdateOnly = false );
@@ -62,4 +62,10 @@ interface BridgeInterface {
 	 * @return int
 	 */
 	public function getFreeagentInvoiceIdFromStripeBalanceTxn( $oStripeTxn );
+
+	/**
+	 * @param BalanceTransaction $oStripeTxn
+	 * @return bool
+	 */
+	public function verifyStripeToInternalPaymentLink( $oStripeTxn );
 }

@@ -45,6 +45,13 @@ class InvoicesVerify {
 
 			$oInvoiceToReconcile = null;
 
+			// We first check that we can build the link reliably between this ($oBalTxn)
+			// Stripe Balance Transaction, and the internal Payment (which links us to Freeagent)
+			$bValidLink = $oBridge->verifyStripeToInternalPaymentLink( $oBalTxn );
+			if ( !$bValidLink ) {
+				continue;
+			}
+
 			$nFreeagentInvoiceId = $oBridge->getFreeagentInvoiceIdFromStripeBalanceTxn( $oBalTxn );
 			if ( empty( $nFreeagentInvoiceId ) ) {
 				// No Invoice, so we create it.
@@ -109,7 +116,7 @@ class InvoicesVerify {
 	protected function getStripeBalanceTxns() {
 		return ( new GetStripeBalanceTransactionsFromPayout() )
 			->setStripePayout( $this->getStripePayout() )
-			->setTransactionType( 'charges' )
+			->setTransactionType( 'charge' )
 			->retrieve();
 	}
 
