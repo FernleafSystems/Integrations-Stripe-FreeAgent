@@ -69,7 +69,8 @@ class FindForStripePayout {
 			->setConnection( $this->getConnection() )
 			->filterByContact( $this->getContactVo() )
 			->filterByDateRange( $oPayout->arrival_date, 5 )
-			->filterByReference( $oPayout->id );
+			->filterByReference( $oPayout->id )
+			->first();
 
 		if ( empty( $oBill ) ) {
 			throw new \Exception( sprintf( 'Failed to find bill in FreeAgent for Payout transfer ID %s', $oPayout->id ) );
