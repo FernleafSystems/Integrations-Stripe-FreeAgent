@@ -70,6 +70,13 @@ class FreeagentConfigVO {
 	}
 
 	/**
+	 * @return bool
+	 */
+	public function isAutoCreateBankTransactions() {
+		return (bool)$this->getParam( 'auto_create_bank_txn' );
+	}
+
+	/**
 	 * @param int $nVal
 	 * @return $this
 	 */
@@ -116,6 +123,14 @@ class FreeagentConfigVO {
 	 */
 	public function setInvoiceItemCategoryId( $nVal ) {
 		return $this->setParam( 'invoice_item_cat_id', $nVal );
+	}
+
+	/**
+	 * @param bool $bAutoCreate
+	 * @return $this
+	 */
+	public function setIsAutoCreateBankTransactions( $bAutoCreate = true ) {
+		return $this->setParam( 'isAutoCreateBankTransactions', $bAutoCreate );
 	}
 
 	/**
