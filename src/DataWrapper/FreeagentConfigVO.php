@@ -130,7 +130,7 @@ class FreeagentConfigVO {
 	 * @return $this
 	 */
 	public function setIsAutoCreateBankTransactions( $bAutoCreate = true ) {
-		return $this->setParam( 'isAutoCreateBankTransactions', $bAutoCreate );
+		return $this->setParam( 'auto_create_bank_txn', $bAutoCreate );
 	}
 
 	/**
