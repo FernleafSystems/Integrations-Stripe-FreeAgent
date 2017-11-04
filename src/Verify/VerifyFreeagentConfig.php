@@ -63,6 +63,14 @@ class VerifyFreeagentConfig {
 				->exists();
 		}
 
+		if ( $bValid ) {
+			$sBaseAccountCurrency = ( new Entities\Company\Retrieve() )
+				->setConnection( $oCon )
+				->retrieve()
+				->getCurrency();
+			$bValid = $oFreeAgentConfig->getBankAccountIdForCurrency( $sBaseAccountCurrency ) > 0;
+		}
+
 		return $bValid;
 	}
 }
