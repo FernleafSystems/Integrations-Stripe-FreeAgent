@@ -5,15 +5,20 @@ namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\Ed
 use FernleafSystems\ApiWrappers\Base\ConnectionConsumer;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Contacts\ContactVO;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Invoices\InvoiceVO;
+use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\BridgeInterface;
 use Stripe\BalanceTransaction;
 
 class EddBridge implements BridgeInterface {
 
 	use ConnectionConsumer;
 
+	public function __construct() {
+		EDD_Recurring(); // initializes anything that's required
+	}
+
 	/**
 	 * @param BalanceTransaction $oBalTxn
-	 * @param bool $bUpdateOnly
+	 * @param bool               $bUpdateOnly
 	 * @return ContactVO
 	 */
 	public function createFreeagentContact( $oBalTxn, $bUpdateOnly = false ) {
@@ -25,7 +30,7 @@ class EddBridge implements BridgeInterface {
 	}
 
 	/**
-	 * @param $oBalTxn
+	 * @param BalanceTransaction $oBalTxn
 	 * @return InvoiceVO
 	 */
 	public function createFreeagentInvoice( $oBalTxn ) {
@@ -45,9 +50,20 @@ class EddBridge implements BridgeInterface {
 	 */
 	public function getEddPaymentFromStripeBalanceTxn( $oStripeTxn ) {
 		/** @var \EDD_Subscription[] $aSubscriptions */
-		$aSubscriptions = ( new \EDD_Subscriptions_DB() )
-			->get_subscriptions( array( 'transaction_id' => $oStripeTxn->source ) );
+		$aSubscriptions = $this->getInternalSubscriptionsForStripeTxn( $oStripeTxn );
+		if ( empty( $aSubscriptions ) ) {
+			return null;
+		}
 		return new \EDD_Payment( $aSubscriptions[ 0 ]->get_original_payment_id() );
+	}
+
+	/**
+	 * @param BalanceTransaction $oStripeTxn
+	 * @return array
+	 */
+	protected function getInternalSubscriptionsForStripeTxn( $oStripeTxn ) {
+		return ( new \EDD_Subscriptions_DB() )
+			->get_subscriptions( array( 'transaction_id' => $oStripeTxn->source ) );
 	}
 
 	/**
@@ -101,6 +117,16 @@ class EddBridge implements BridgeInterface {
 	 */
 	public function getFreeagentInvoiceIdFromStripeBalanceTxn( $oStripeTxn ) {
 		return $this->getFreeagentInvoiceIdFromEddPayment(
-			$this->getEddPaymentFromStripeBalanceTxn( $oStripeTxn ) );
+			$this->getEddPaymentFromStripeBalanceTxn( $oStripeTxn )
+		);
+	}
+
+	/**
+	 * @param BalanceTransaction $oStripeTxn
+	 * @return bool
+	 */
+	public function verifyStripeToInternalPaymentLink( $oStripeTxn ) {
+		$aSub = $this->getInternalSubscriptionsForStripeTxn( $oStripeTxn );
+		return !empty( $aSub );
 	}
 }

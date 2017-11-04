@@ -1,6 +1,6 @@
 <?php
 
-namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\Edd;
+namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge;
 
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Contacts\ContactVO;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Invoices\InvoiceVO;
@@ -10,13 +10,13 @@ interface BridgeInterface {
 
 	/**
 	 * @param BalanceTransaction $oBalTxn
-	 * @param bool $bUpdateOnly
+	 * @param bool               $bUpdateOnly
 	 * @return ContactVO
 	 */
 	public function createFreeagentContact( $oBalTxn, $bUpdateOnly = false );
 
 	/**
-	 * @param $oBalTxn
+	 * @param BalanceTransaction $oBalTxn
 	 * @return InvoiceVO
 	 */
 	public function createFreeagentInvoice( $oBalTxn );
@@ -62,4 +62,10 @@ interface BridgeInterface {
 	 * @return int
 	 */
 	public function getFreeagentInvoiceIdFromStripeBalanceTxn( $oStripeTxn );
+
+	/**
+	 * @param BalanceTransaction $oStripeTxn
+	 * @return bool
+	 */
+	public function verifyStripeToInternalPaymentLink( $oStripeTxn );
 }

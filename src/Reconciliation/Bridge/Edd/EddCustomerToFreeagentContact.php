@@ -13,22 +13,21 @@ class EddCustomerToFreeagentContact {
 
 	use ConnectionConsumer;
 	const KEY_FREEAGENT_CONTACT_ID = 'freeagent_contact_id';
-	/**
-	 * @var \EDD_Customer
-	 */
-	private $oCustomer;
-	/**
-	 * @var \EDD_Payment
-	 */
-	private $oPayment;
+
 	/**
 	 * @var Entities\Contacts\ContactVO
 	 */
 	private $oContact;
+
 	/**
-	 * @var string
+	 * @var \EDD_Customer
 	 */
-	private $sMetaKeyPrefix;
+	private $oCustomer;
+
+	/**
+	 * @var \EDD_Payment
+	 */
+	private $oPayment;
 
 	/**
 	 * @return Entities\Contacts\ContactVO
@@ -37,7 +36,7 @@ class EddCustomerToFreeagentContact {
 
 		// If there is no link between Customer and Contact, create it.
 		$nFreeagentContactId = $this->getCustomer()
-									->get_meta( $this->getFreeagentContactIdMetaKey() );
+									->get_meta( self::KEY_FREEAGENT_CONTACT_ID );
 		if ( empty( $nFreeagentContactId ) ) {
 			$this->createNewFreeagentContact();
 		}
@@ -57,7 +56,7 @@ class EddCustomerToFreeagentContact {
 	/**
 	 * @return string
 	 */
-	public function createNewFreeagentContact() {
+	protected function createNewFreeagentContact() {
 		$oCustomer = $this->getCustomer();
 		$aNames = explode( ' ', $oCustomer->name, 2 );
 		if ( !isset( $aNames[ 1 ] ) ) {
@@ -70,7 +69,7 @@ class EddCustomerToFreeagentContact {
 			->setLastName( $aNames[ 1 ] )
 			->sendRequestWithVoResponse();
 
-		$oCustomer->update_meta( $this->getFreeagentContactIdMetaKey(), $oContact->getId() );
+		$oCustomer->update_meta( self::KEY_FREEAGENT_CONTACT_ID, $oContact->getId() );
 
 		return $oContact->getId();
 	}
@@ -113,19 +112,12 @@ class EddCustomerToFreeagentContact {
 	/**
 	 * @return Entities\Contacts\ContactVO
 	 */
-	protected function retrieveFreeagentContact() {
-		return ( new Entities\Contacts\Retrieve() )
-			->setConnection( $this->getConnection() )
-			->setEntityId( $this->getCustomer()->get_meta( $this->getFreeagentContactIdMetaKey() ) )
-			->sendRequestWithVoResponse();
-	}
-
-	/**
-	 * @return Entities\Contacts\ContactVO
-	 */
-	public function getContact() {
+	protected function getContact() {
 		if ( !isset( $this->oContact ) ) {
-			$this->oContact = $this->retrieveFreeagentContact();
+			$this->oContact = ( new Entities\Contacts\Retrieve() )
+				->setConnection( $this->getConnection() )
+				->setEntityId( $this->getCustomer()->get_meta( self::KEY_FREEAGENT_CONTACT_ID ) )
+				->sendRequestWithVoResponse();
 		}
 		return $this->oContact;
 	}
@@ -135,20 +127,6 @@ class EddCustomerToFreeagentContact {
 	 */
 	public function getCustomer() {
 		return $this->oCustomer;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getFreeagentContactIdMetaKey() {
-		return $this->getMetaKeyPrefix().self::KEY_FREEAGENT_CONTACT_ID;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getMetaKeyPrefix() {
-		return $this->sMetaKeyPrefix;
 	}
 
 	/**
@@ -173,15 +151,6 @@ class EddCustomerToFreeagentContact {
 	 */
 	public function setCustomer( $oCustomer ) {
 		$this->oCustomer = $oCustomer;
-		return $this;
-	}
-
-	/**
-	 * @param string $sMetaKeyPrefix
-	 * @return $this
-	 */
-	public function setMetaKeyPrefix( $sMetaKeyPrefix ) {
-		$this->sMetaKeyPrefix = $sMetaKeyPrefix;
 		return $this;
 	}
 

@@ -29,6 +29,10 @@ class ExplainBankTxnWithInvoices {
 			$oBalTxn = $oInvoiceItem->getStripeBalanceTransaction();
 			$oCharge = $oInvoiceItem->getStripeCharge();
 
+			if ( (int)$oInvoice->getValueDue() == 0 ) {
+				continue;
+			}
+
 			try {
 				$oCreator = ( new Create() )
 					->setConnection( $this->getConnection() )
@@ -39,7 +43,7 @@ class ExplainBankTxnWithInvoices {
 
 				// e.g. we're explaining a USD invoice using a transaction in GBP bank account
 				if ( strcasecmp( $oCharge->currency, $oBalTxn->currency ) != 0 ) { //foreign currency converted by Stripe
-					$oCreator->setForeignCurrencyValue( $oCharge->amount );
+					$oCreator->setForeignCurrencyValue( $oCharge->amount/100 );
 				}
 				$oCreator->create();
 			}

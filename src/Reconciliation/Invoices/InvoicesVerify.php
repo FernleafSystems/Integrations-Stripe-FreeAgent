@@ -7,7 +7,7 @@ use FernleafSystems\ApiWrappers\Freeagent\Entities\Invoices\Find;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Invoices\InvoiceVO;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Lookups\GetStripeBalanceTransactionsFromPayout;
-use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\Edd\BridgeInterface;
+use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\BridgeInterface;
 use Stripe\Charge;
 
 class InvoicesVerify {
@@ -45,21 +45,28 @@ class InvoicesVerify {
 
 			$oInvoiceToReconcile = null;
 
-			$nFreeagentInvoiceId = $oBridge->getFreeagentInvoiceIdFromStripeBalanceTxn( $oBalTxn );
-			if ( empty( $nFreeagentInvoiceId ) ) {
-				// No Invoice, so we create it.
-				$oNewInvoice = $oBridge->createFreeagentInvoice( $oBalTxn );
-				if ( !empty( $oNewInvoice ) ) {
-					$oInvoiceToReconcile = $oNewInvoice;
-				}
+			// We first check that we can build the link reliably between this ($oBalTxn)
+			// Stripe Balance Transaction, and the internal Payment (which links us to Freeagent)
+			$bValidLink = $oBridge->verifyStripeToInternalPaymentLink( $oBalTxn );
+			if ( !$bValidLink ) {
+				continue;
 			}
-			else {
+
+			$nFreeagentInvoiceId = $oBridge->getFreeagentInvoiceIdFromStripeBalanceTxn( $oBalTxn );
+			if ( !empty( $nFreeagentInvoiceId ) ) {
 				// Verify we've been able to load it.
 				foreach ( $aFreeagentInvoicesPool as $oInvoice ) {
 					if ( $nFreeagentInvoiceId == $oInvoice->getId() ) {
 						$oInvoiceToReconcile = $oInvoice;
 						break;
 					}
+				}
+			}
+
+			if ( is_null( $oInvoiceToReconcile ) ) { // No Invoice, so we create it.
+				$oNewInvoice = $oBridge->createFreeagentInvoice( $oBalTxn );
+				if ( !empty( $oNewInvoice ) ) {
+					$oInvoiceToReconcile = $oNewInvoice;
 				}
 			}
 
@@ -109,7 +116,7 @@ class InvoicesVerify {
 	protected function getStripeBalanceTxns() {
 		return ( new GetStripeBalanceTransactionsFromPayout() )
 			->setStripePayout( $this->getStripePayout() )
-			->setTransactionType( 'charges' )
+			->setTransactionType( 'charge' )
 			->retrieve();
 	}
 

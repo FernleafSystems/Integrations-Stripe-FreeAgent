@@ -3,67 +3,60 @@
 namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bills;
 
 use FernleafSystems\ApiWrappers\Base\ConnectionConsumer;
-use FernleafSystems\ApiWrappers\Freeagent\Entities\BankTransactionExplanation\Create;
-use FernleafSystems\ApiWrappers\Freeagent\Entities\Bills\BillVO;
-use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\BankAccountVoConsumer;
+use FernleafSystems\ApiWrappers\Freeagent\Entities;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\BankTransactionVoConsumer;
+use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\FreeagentConfigVoConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
 
 /**
  * Retrieve the Stripe Bill within FreeAgent, and the associated Bank Transaction
  * for the Payout and creates a FreeAgent Explanation for it.
- *
  * Class ExplainBankTxnWithStripeBill
  * @package FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bills
  */
 class ExplainBankTxnWithStripeBill {
 
-	use BankAccountVoConsumer,
-		BankTransactionVoConsumer,
+	use BankTransactionVoConsumer,
+		FreeagentConfigVoConsumer,
 		StripePayoutConsumer,
 		ConnectionConsumer;
-
-	const DEFAULT_NATIVE_CURRENCY = 'GBP';
-
-	/**
-	 * The native Freeagent account currency - all Bills must be processed in this currency
-	 * @var string
-	 */
-	protected $sNativeCurrency;
 
 	/**
 	 * Determine whether we're working in our native currency, or whether
 	 * we have to explain the bill using our Foreign Bill handling.
-	 * @param BillVO $oBill
+	 * @param Entities\Bills\BillVO $oBill
 	 * @throws \Exception
 	 */
 	public function process( $oBill ) {
 		if ( $oBill->getAmountDue() > 0 ) {
 
-			if ( strcmp( $this->getStripePayout()->currency, $this->getNativeCurrency() ) == 0 ) {
+			if ( strcasecmp( $this->getStripePayout()->currency, $this->getBaseCurrency() ) == 0 ) {
 				$this->createSimpleExplanation( $oBill );
 			}
 			else {
-				if ( is_null( $this->getBankAccountVo() ) ) {
-					throw  new \Exception( 'Attempting to explain a foreign currency bill without a currency transfer account' );
+				$oForeignBankAccount = $this->getForeignCurrencyBankAccount();
+				if ( is_null( $oForeignBankAccount ) ) {
+					throw  new \Exception( 'Attempting to explain a foreign currency bill without a currency transfer account.' );
 				}
+
 				( new ExplainBankTxnWithForeignBill() )
 					->setStripePayout( $this->getStripePayout() )
 					->setConnection( $this->getConnection() )
 					->setBankTransactionVo( $this->getBankTransactionVo() )
-					->setBankAccountVo( $this->getBankAccountVo() )
+					->setBankAccountVo( $oForeignBankAccount )
 					->createExplanation( $oBill );
 			}
 		}
 	}
 
 	/**
-	 * @param BillVO $oBill
+	 * @param Entities\Bills\BillVO $oBill
 	 * @throws \Exception
 	 */
 	public function createSimpleExplanation( $oBill ) {
 
-		$oBankTxnExp = ( new Create() )
+		$oBankTxnExp = ( new Entities\BankTransactionExplanation\Create() )
+			->setConnection( $this->getConnection() )
 			->setBankTxn( $this->getBankTransactionVo() )
 			->setBillPaid( $oBill )
 			->setValue( $oBill->getAmountTotal() )
@@ -77,16 +70,28 @@ class ExplainBankTxnWithStripeBill {
 	/**
 	 * @return string
 	 */
-	public function getNativeCurrency() {
-		return isset( $this->sNativeCurrency ) ? $this->sNativeCurrency : self::DEFAULT_NATIVE_CURRENCY;
+	protected function getBaseCurrency() {
+		/** @var Entities\Company\CompanyVO $oCompany */
+		$oCompany = ( new Entities\Company\Retrieve() )
+			->setConnection( $this->getConnection() )
+			->sendRequestWithVoResponse();
+		return $oCompany->getCurrency();
 	}
 
 	/**
-	 * @param string $sCurrency e.g. gbp, usd  (case insensitive)
-	 * @return $this
+	 * @return Entities\BankAccounts\BankAccountVO
 	 */
-	public function setNativeCurrency( $sCurrency ) {
-		$this->sNativeCurrency = $sCurrency;
-		return $this;
+	protected function getForeignCurrencyBankAccount() {
+		$oForeignBankAccount = null;
+
+		$nForeignBankAccountId = $this->getFreeagentConfigVO()
+									  ->getBankAccountIdForeignCurrencyTransfer();
+		if ( !empty( $nForeignBankAccountId ) ) { // we retrieve it even though it may not be needed
+			$oForeignBankAccount = ( new Entities\BankAccounts\Retrieve() )
+				->setConnection( $this->getConnection() )
+				->setEntityId( $nForeignBankAccountId )
+				->sendRequestWithVoResponse();
+		}
+		return $oForeignBankAccount;
 	}
 }

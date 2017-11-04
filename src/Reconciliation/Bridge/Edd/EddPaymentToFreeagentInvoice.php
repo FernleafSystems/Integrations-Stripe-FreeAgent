@@ -15,18 +15,11 @@ class EddPaymentToFreeagentInvoice {
 	use ConnectionConsumer,
 		ContactVoConsumer;
 	const KEY_FREEAGENT_INVOICE_ID = 'freeagent_invoice_id';
+
 	/**
 	 * @var \EDD_Payment
 	 */
 	private $oPayment;
-
-	/**
-	 * @return int
-	 */
-	protected function getLinkedFreeagentInvoiceId() {
-		return $this->getPayment()
-					->get_meta( self::KEY_FREEAGENT_INVOICE_ID );
-	}
 
 	/**
 	 * @return Entities\Invoices\InvoiceVO|null
@@ -63,7 +56,31 @@ class EddPaymentToFreeagentInvoice {
 
 		$oInvoice = $oCreateInvoice->create();
 		$oPayment->update_meta( self::KEY_FREEAGENT_INVOICE_ID, $oInvoice->getId() );
-		return $oInvoice;
+		sleep( 2 );
+		return $this->markInvoiceAsSent( $oInvoice );
+	}
+
+	/**
+	 * @param Entities\Invoices\InvoiceVO $oInvoice
+	 * @return Entities\Invoices\InvoiceVO
+	 */
+	protected function markInvoiceAsSent( $oInvoice ) {
+		( new Entities\Invoices\MarkAs() )
+			->setConnection( $this->getConnection() )
+			->setEntityId( $oInvoice->getId() )
+			->sent();
+		return ( new Entities\Invoices\Retrieve() )
+			->setConnection( $this->getConnection() )
+			->setEntityId( $oInvoice->getId() )
+			->sendRequestWithVoResponse();
+	}
+
+	/**
+	 * @return int
+	 */
+	protected function getLinkedFreeagentInvoiceId() {
+		return $this->getPayment()
+					->get_meta( self::KEY_FREEAGENT_INVOICE_ID );
 	}
 
 	/**
@@ -96,9 +113,8 @@ class EddPaymentToFreeagentInvoice {
 				->setDescription( $aLineItem[ 'name' ] )
 				->setQuantity( $aLineItem[ 'quantity' ] )
 				->setPrice( $aLineItem[ 'subtotal' ] )
-				->setSalesTaxRate( $this->getPayment()->tax_rate )
+				->setSalesTaxRate( $this->getPayment()->tax_rate*100 )
 				->setType( 'Years' ); //TODO: Hard coded, need to adapt to purchase
-
 		}
 		return $aInvoiceItems;
 	}
