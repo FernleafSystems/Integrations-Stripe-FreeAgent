@@ -16,7 +16,7 @@ interface BridgeInterface {
 	public function createFreeagentContact( $oBalTxn, $bUpdateOnly = false );
 
 	/**
-	 * @param $oBalTxn
+	 * @param BalanceTransaction $oBalTxn
 	 * @return InvoiceVO
 	 */
 	public function createFreeagentInvoice( $oBalTxn );

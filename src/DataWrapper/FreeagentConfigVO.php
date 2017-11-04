@@ -13,6 +13,23 @@ class FreeagentConfigVO {
 	use StdClassAdapter;
 
 	/**
+	 * Where the key is the ISO3 code for currency and the value is the bank account ID
+	 * @return array
+	 */
+	public function getAllBankAccounts() {
+		$aAccounts = array();
+
+		foreach ( $this->getRawDataAsArray() as $sKey => $mValue ) {
+			if ( preg_match( '#^bank_account_id_[a-z]{3}$#i', $sKey )  ) {
+				$sCurrency = str_replace( 'bank_account_id_', '', $sKey );
+				$aAccounts[ $sCurrency ] = $mValue;
+			}
+		}
+
+		return $aAccounts;
+	}
+
+	/**
 	 * @return int
 	 */
 	public function getBankAccountIdEur() {

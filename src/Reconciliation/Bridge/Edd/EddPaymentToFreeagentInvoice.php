@@ -113,7 +113,7 @@ class EddPaymentToFreeagentInvoice {
 				->setDescription( $aLineItem[ 'name' ] )
 				->setQuantity( $aLineItem[ 'quantity' ] )
 				->setPrice( $aLineItem[ 'subtotal' ] )
-				->setSalesTaxRate( $this->getPayment()->tax_rate * 100 )
+				->setSalesTaxRate( $this->getPayment()->tax_rate*100 )
 				->setType( 'Years' ); //TODO: Hard coded, need to adapt to purchase
 		}
 		return $aInvoiceItems;

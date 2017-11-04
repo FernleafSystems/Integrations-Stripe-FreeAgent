@@ -13,18 +13,22 @@ class EddCustomerToFreeagentContact {
 
 	use ConnectionConsumer;
 	const KEY_FREEAGENT_CONTACT_ID = 'freeagent_contact_id';
+
 	/**
 	 * @var \EDD_Customer
 	 */
 	private $oCustomer;
+
 	/**
 	 * @var \EDD_Payment
 	 */
 	private $oPayment;
+
 	/**
 	 * @var Entities\Contacts\ContactVO
 	 */
 	private $oContact;
+
 	/**
 	 * @var string
 	 */
