@@ -9,7 +9,7 @@ use Stripe\BalanceTransaction;
  * Class CountTotalFeesForStripePayout
  * @package FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bills
  */
-class CountTotalFeesForStripePayout {
+class SumTotalFeesForStripePayout {
 
 	use StripePayoutConsumer;
 

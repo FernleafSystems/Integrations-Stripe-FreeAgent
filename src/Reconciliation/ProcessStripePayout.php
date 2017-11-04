@@ -19,23 +19,27 @@ class ProcessStripePayout {
 		Consumers\FreeagentConfigVoConsumer;
 
 	/**
+	 * - verify we can load the bank account
+	 * - verify we can load the bank transaction (maybe create it automatically if not)
+	 * - reconcile stripe charges with freeagent invoices
+	 * - reconcile stripe fees with freeagent bill
 	 * @param string $sStripePayoutId
 	 * @throws \Exception
 	 */
 	public function process( $sStripePayoutId ) {
 
+		$oCon = $this->getConnection();
 		$oPayout = Payout::retrieve( $sStripePayoutId );
-		$sCurrency = strtoupper( $oPayout->currency );
 		$oFreeagentConfig = $this->getFreeagentConfigVO();
 
-		$sBankId = $oFreeagentConfig->getBankAccountIdForCurrency( $sCurrency );
+		$sBankId = $oFreeagentConfig->getBankAccountIdForCurrency( $oPayout->currency );
 		if ( empty( $sBankId ) ) {
-			throw new \Exception( sprintf( 'No bank account specified for currency "%s".', $sCurrency ) );
+			throw new \Exception( sprintf( 'No bank account specified for currency "%s".', $oPayout->currency ) );
 		}
 
 		/** @var Entities\BankAccounts\BankAccountVO $oBankAccount */
 		$oBankAccount = ( new Entities\BankAccounts\Retrieve() )
-			->setConnection( $this->getConnection() )
+			->setConnection( $oCon )
 			->setEntityId( $sBankId )
 			->sendRequestWithVoResponse();
 		if ( empty( $oBankAccount ) ) {
@@ -44,58 +48,37 @@ class ProcessStripePayout {
 
 		// Find/Create the Freeagent Bank Transaction
 		$oBankTxn = ( new Reconciliation\BankTransactions\FindForStripePayout() )
-			->setConnection( $this->getConnection() )
+			->setConnection( $oCon )
 			->setStripePayout( $oPayout )
 			->setBankAccountVo( $oBankAccount )
 			->find();
-
 		if ( empty( $oBankTxn ) ) {
 			if ( $oFreeagentConfig->isAutoCreateBankTransactions() ) {
 				$oBankTxn = ( new Reconciliation\BankTransactions\CreateForStripePayout() )
-					->setConnection( $this->getConnection() )
+					->setConnection( $oCon )
 					->setStripePayout( $oPayout )
 					->setBankAccountVo( $oBankAccount )
 					->create();
 			}
-			if ( empty( $oBankTxn ) ) {
-				throw new \Exception( sprintf( 'Bank Transaction does not exist for this Payout "%s".', $oPayout->id ) );
-			}
+		}
+		if ( empty( $oBankTxn ) ) {
+			throw new \Exception( sprintf( 'Bank Transaction does not exist for this Payout "%s".', $oPayout->id ) );
 		}
 
 		// 1) Reconcile all the Invoices
 		( new Reconciliation\ProcessInvoicesForStripePayout() )
-			->setConnection( $this->getConnection() )
+			->setConnection( $oCon )
 			->setStripePayout( $oPayout )
 			->setBankTransactionVo( $oBankTxn )
 			->setBridge( $this->getBridge() )
-			->process();
+			->run();
 
-		// 2) Reconcile the Stripe Fees with a Bill in Freeagent.
-		$oStripeContact = ( new Entities\Contacts\Retrieve() )
-			->setConnection( $this->getConnection() )
-			->setEntityId( $oFreeagentConfig->getStripeContactId() )
-			->sendRequestWithVoResponse();
-
-		$oForeignBankAccount = null;
-		$nForeignBankAccountId = $oFreeagentConfig->getBankAccountIdForeignCurrencyTransfer();
-		if ( !empty( $nForeignBankAccountId ) ) { // we retrieve it even though it may not be needed
-			$oForeignBankAccount = ( new Entities\BankAccounts\Retrieve() )
-				->setConnection( $this->getConnection() )
-				->setEntityId( $nForeignBankAccountId )
-				->sendRequestWithVoResponse();
-			if ( empty( $oBankTxn ) ) {
-				throw new \Exception( sprintf( 'A bank account for foreign currency transfers was
-				provided but could not be loaded with ID "%s".', $nForeignBankAccountId ) );
-			}
-		}
-
+		// 2) Reconcile the Stripe Bill
 		( new Reconciliation\ProcessBillForStripePayout() )
-			->setConnection( $this->getConnection() )
+			->setConnection( $oCon )
 			->setStripePayout( $oPayout )
 			->setFreeagentConfigVO( $oFreeagentConfig )
-			->setContactVo( $oStripeContact )
 			->setBankTransactionVo( $oBankTxn )
-			->setForeignCurrencyTransferAccount( $oForeignBankAccount )
-			->process();
+			->run();
 	}
 }

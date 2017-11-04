@@ -27,7 +27,7 @@ class ProcessInvoicesForStripePayout {
 	/**
 	 * @throws \Exception
 	 */
-	public function process() {
+	public function run() {
 
 		$aReconInvoiceData = ( new InvoicesVerify() )
 			->setConnection( $this->getConnection() )
