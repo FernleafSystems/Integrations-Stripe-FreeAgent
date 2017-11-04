@@ -22,14 +22,6 @@ class EddPaymentToFreeagentInvoice {
 	private $oPayment;
 
 	/**
-	 * @return int
-	 */
-	protected function getLinkedFreeagentInvoiceId() {
-		return $this->getPayment()
-					->get_meta( self::KEY_FREEAGENT_INVOICE_ID );
-	}
-
-	/**
 	 * @return Entities\Invoices\InvoiceVO|null
 	 */
 	public function createInvoice() {
@@ -81,6 +73,14 @@ class EddPaymentToFreeagentInvoice {
 			->setConnection( $this->getConnection() )
 			->setEntityId( $oInvoice->getId() )
 			->sendRequestWithVoResponse();
+	}
+
+	/**
+	 * @return int
+	 */
+	protected function getLinkedFreeagentInvoiceId() {
+		return $this->getPayment()
+					->get_meta( self::KEY_FREEAGENT_INVOICE_ID );
 	}
 
 	/**
