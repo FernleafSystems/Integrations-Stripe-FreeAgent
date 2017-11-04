@@ -30,11 +30,6 @@ class EddCustomerToFreeagentContact {
 	private $oContact;
 
 	/**
-	 * @var string
-	 */
-	private $sMetaKeyPrefix;
-
-	/**
 	 * @return Entities\Contacts\ContactVO
 	 */
 	public function create() {
@@ -117,19 +112,12 @@ class EddCustomerToFreeagentContact {
 	/**
 	 * @return Entities\Contacts\ContactVO
 	 */
-	protected function retrieveFreeagentContact() {
-		return ( new Entities\Contacts\Retrieve() )
-			->setConnection( $this->getConnection() )
-			->setEntityId( $this->getCustomer()->get_meta( $this->getFreeagentContactIdMetaKey() ) )
-			->sendRequestWithVoResponse();
-	}
-
-	/**
-	 * @return Entities\Contacts\ContactVO
-	 */
 	public function getContact() {
 		if ( !isset( $this->oContact ) ) {
-			$this->oContact = $this->retrieveFreeagentContact();
+			$this->oContact = ( new Entities\Contacts\Retrieve() )
+				->setConnection( $this->getConnection() )
+				->setEntityId( $this->getCustomer()->get_meta( $this->getFreeagentContactIdMetaKey() ) )
+				->sendRequestWithVoResponse();
 		}
 		return $this->oContact;
 	}
@@ -145,14 +133,7 @@ class EddCustomerToFreeagentContact {
 	 * @return string
 	 */
 	public function getFreeagentContactIdMetaKey() {
-		return $this->getMetaKeyPrefix().self::KEY_FREEAGENT_CONTACT_ID;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getMetaKeyPrefix() {
-		return $this->sMetaKeyPrefix;
+		return self::KEY_FREEAGENT_CONTACT_ID;
 	}
 
 	/**
@@ -177,15 +158,6 @@ class EddCustomerToFreeagentContact {
 	 */
 	public function setCustomer( $oCustomer ) {
 		$this->oCustomer = $oCustomer;
-		return $this;
-	}
-
-	/**
-	 * @param string $sMetaKeyPrefix
-	 * @return $this
-	 */
-	public function setMetaKeyPrefix( $sMetaKeyPrefix ) {
-		$this->sMetaKeyPrefix = $sMetaKeyPrefix;
 		return $this;
 	}
 
