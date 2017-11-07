@@ -19,7 +19,7 @@ interface BridgeInterface {
 	 * @param BalanceTransaction $oBalTxn
 	 * @return InvoiceVO
 	 */
-	public function createFreeagentInvoice( $oBalTxn );
+	public function createFreeagentInvoiceFromStripeBalanceTxn( $oBalTxn );
 
 	/**
 	 * @param BalanceTransaction $oStripeTxn

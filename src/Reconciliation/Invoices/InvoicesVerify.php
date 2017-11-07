@@ -64,7 +64,7 @@ class InvoicesVerify {
 			}
 
 			if ( is_null( $oInvoiceToReconcile ) ) { // No Invoice, so we create it.
-				$oNewInvoice = $oBridge->createFreeagentInvoice( $oBalTxn );
+				$oNewInvoice = $oBridge->createFreeagentInvoiceFromStripeBalanceTxn( $oBalTxn );
 				if ( !empty( $oNewInvoice ) ) {
 					$oInvoiceToReconcile = $oNewInvoice;
 				}
