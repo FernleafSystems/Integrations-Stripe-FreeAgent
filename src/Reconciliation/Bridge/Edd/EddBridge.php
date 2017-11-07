@@ -5,6 +5,7 @@ namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\Ed
 use FernleafSystems\ApiWrappers\Base\ConnectionConsumer;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Contacts\ContactVO;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Invoices\InvoiceVO;
+use FernleafSystems\ApiWrappers\Freeagent\Entities\Invoices\Retrieve;
 use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\BridgeInterface;
 use Stripe\BalanceTransaction;
 
@@ -40,6 +41,7 @@ class EddBridge implements BridgeInterface {
 	}
 
 	/**
+	 * First attempts to locate a previously created invoice for this Payment.
 	 * @param \EDD_Payment $oPayment
 	 * @return InvoiceVO
 	 */
@@ -47,11 +49,23 @@ class EddBridge implements BridgeInterface {
 		$nContactId = $this->getFreeagentContactIdFromEddPayment( $oPayment );
 		$oContact = $this->createFreeagentContact( $oPayment, !empty( $nContactId ) );
 
-		return ( new EddPaymentToFreeagentInvoice() )
-			->setConnection( $this->getConnection() )
-			->setContactVo( $oContact )
-			->setPayment( $oPayment )
-			->createInvoice();
+		$oInvoice = null;
+		$nInvoiceId = $this->getFreeagentInvoiceIdFromEddPayment( $oPayment );
+		if ( !empty( $nInvoiceId ) ) {
+			$oInvoice = ( new Retrieve() )
+				->setConnection( $this->getConnection() )
+				->setEntityId( $nInvoiceId )
+				->retrieve();
+		}
+
+		if ( empty( $oInvoice ) ) {
+			$oInvoice = ( new EddPaymentToFreeagentInvoice() )
+				->setConnection( $this->getConnection() )
+				->setContactVo( $oContact )
+				->setPayment( $oPayment )
+				->createInvoice();
+		}
+		return $oInvoice;
 	}
 
 	/**

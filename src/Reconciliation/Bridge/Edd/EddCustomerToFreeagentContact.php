@@ -95,6 +95,7 @@ class EddCustomerToFreeagentContact {
 			->setAddress_Country( $sPaymentCountry )
 			->setSalesTaxNumber( $aUserInfo[ 'vat_number' ] )
 			->setOrganisationName( $aUserInfo[ 'company' ] )
+			->setUseContactLevelInvoiceSequence( true )
 			->update();
 
 		return $this->setContact( $oContact );
