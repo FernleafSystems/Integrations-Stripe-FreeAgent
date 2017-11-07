@@ -17,15 +17,15 @@ class EddBridge implements BridgeInterface {
 	}
 
 	/**
-	 * @param BalanceTransaction $oBalTxn
-	 * @param bool               $bUpdateOnly
+	 * @param \EDD_Payment $oPayment
+	 * @param bool         $bUpdateOnly
 	 * @return ContactVO
 	 */
-	public function createFreeagentContact( $oBalTxn, $bUpdateOnly = false ) {
+	public function createFreeagentContact( $oPayment, $bUpdateOnly = false ) {
 		$oContactCreator = ( new EddCustomerToFreeagentContact() )
 			->setConnection( $this->getConnection() )
-			->setCustomer( $this->getEddCustomerFromStripeTxn( $oBalTxn ) )
-			->setPayment( $this->getEddPaymentFromStripeBalanceTxn( $oBalTxn ) );
+			->setCustomer( $this->getEddCustomerFromEddPayment( $oPayment ) )
+			->setPayment( $oPayment );
 		return $bUpdateOnly ? $oContactCreator->update() : $oContactCreator->create();
 	}
 
@@ -33,14 +33,24 @@ class EddBridge implements BridgeInterface {
 	 * @param BalanceTransaction $oBalTxn
 	 * @return InvoiceVO
 	 */
-	public function createFreeagentInvoice( $oBalTxn ) {
-		$nContactId = $this->getFreeagentContactIdFromStripeBalTxn( $oBalTxn );
-		$oContact = $this->createFreeagentContact( $oBalTxn, !empty( $nContactId ) );
+	public function createFreeagentInvoiceFromStripeBalanceTxn( $oBalTxn ) {
+		return $this->createFreeagentInvoiceFromEddPayment(
+			$this->getEddPaymentFromStripeBalanceTxn( $oBalTxn )
+		);
+	}
+
+	/**
+	 * @param \EDD_Payment $oPayment
+	 * @return InvoiceVO
+	 */
+	public function createFreeagentInvoiceFromEddPayment( $oPayment ) {
+		$nContactId = $this->getFreeagentContactIdFromEddPayment( $oPayment );
+		$oContact = $this->createFreeagentContact( $oPayment, !empty( $nContactId ) );
 
 		return ( new EddPaymentToFreeagentInvoice() )
 			->setConnection( $this->getConnection() )
 			->setContactVo( $oContact )
-			->setPayment( $this->getEddPaymentFromStripeBalanceTxn( $oBalTxn ) )
+			->setPayment( $oPayment )
 			->createInvoice();
 	}
 
