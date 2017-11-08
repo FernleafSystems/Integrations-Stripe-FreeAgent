@@ -29,10 +29,12 @@ class EddPaymentToFreeagentInvoice {
 		$oContact = $this->getContactVo();
 		$oPayment = $this->getPayment();
 
+		$nDatedOn = empty( $oPayment->date ) ? time() : strtotime( $oPayment->date );
+
 		$oCreateInvoice = ( new Entities\Invoices\Create() )
 			->setConnection( $this->getConnection() )
 			->setContact( $oContact )
-			->setDatedOn( strtotime( $oPayment->completed_date ) )
+			->setDatedOn( $nDatedOn )
 			->setExchangeRate( 1.0 )// TODO: get the balance transaction from Stripe to be sure.
 			->setPaymentTerms( 14 )
 			->setCurrency( $oPayment->currency )
