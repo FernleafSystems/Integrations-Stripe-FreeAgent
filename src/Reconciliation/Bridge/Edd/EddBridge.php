@@ -70,20 +70,35 @@ class EddBridge implements BridgeInterface {
 
 	/**
 	 * @param BalanceTransaction $oStripeTxn
-	 * @return \EDD_Payment
+	 * @return \EDD_Payment|null
 	 */
 	public function getEddPaymentFromStripeBalanceTxn( $oStripeTxn ) {
-		/** @var \EDD_Subscription[] $aSubscriptions */
-		$aSubscriptions = $this->getInternalSubscriptionsForStripeTxn( $oStripeTxn );
-		if ( empty( $aSubscriptions ) ) {
-			return null;
-		}
-		return new \EDD_Payment( $aSubscriptions[ 0 ]->get_original_payment_id() );
+		$nPaymentId = $this->getInternalPaymentIdFromStripeBalanceTransaction( $oStripeTxn );
+		return ( $nPaymentId == 0 ) ? null : new \EDD_Payment( $nPaymentId );
 	}
 
 	/**
 	 * @param BalanceTransaction $oStripeTxn
-	 * @return array
+	 * @return int|null
+	 */
+	protected function getInternalPaymentIdFromStripeBalanceTransaction( $oStripeTxn ) {
+		$nPaymentId = edd_get_purchase_id_by_transaction_id( $oStripeTxn->source );
+		if ( empty( $nPaymentId ) ) {
+			// It wasn't populated so we try looking up the subscrptions.
+			$aSubscriptions = $this->getInternalSubscriptionsForStripeTxn( $oStripeTxn );
+			if ( empty( $aSubscriptions ) ) {
+				$nPaymentId = 0;
+			}
+			else {
+				$nPaymentId = $aSubscriptions[ 0 ]->get_original_payment_id();
+			}
+		}
+		return $nPaymentId;
+	}
+
+	/**
+	 * @param BalanceTransaction $oStripeTxn
+	 * @return \EDD_Subscription[]
 	 */
 	protected function getInternalSubscriptionsForStripeTxn( $oStripeTxn ) {
 		return ( new \EDD_Subscriptions_DB() )
@@ -150,7 +165,6 @@ class EddBridge implements BridgeInterface {
 	 * @return bool
 	 */
 	public function verifyStripeToInternalPaymentLink( $oStripeTxn ) {
-		$aSub = $this->getInternalSubscriptionsForStripeTxn( $oStripeTxn );
-		return !empty( $aSub );
+		return ( $this->getInternalPaymentIdFromStripeBalanceTransaction( $oStripeTxn ) > 0 );
 	}
 }
