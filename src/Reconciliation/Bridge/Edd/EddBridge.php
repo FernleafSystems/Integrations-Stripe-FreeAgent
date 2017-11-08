@@ -79,18 +79,19 @@ class EddBridge implements BridgeInterface {
 
 	/**
 	 * @param BalanceTransaction $oStripeTxn
-	 * @return int|null
+	 * @return int
 	 */
 	protected function getInternalPaymentIdFromStripeBalanceTransaction( $oStripeTxn ) {
 		$nPaymentId = edd_get_purchase_id_by_transaction_id( $oStripeTxn->source );
 		if ( empty( $nPaymentId ) ) {
 			// It wasn't populated so we try looking up the subscrptions.
-			$aSubscriptions = $this->getInternalSubscriptionsForStripeTxn( $oStripeTxn );
-			if ( empty( $aSubscriptions ) ) {
+			$aSubs = $this->getInternalSubscriptionsForStripeTxn( $oStripeTxn );
+			if ( empty( $aSubs ) ) {
 				$nPaymentId = 0;
 			}
 			else {
-				$nPaymentId = $aSubscriptions[ 0 ]->get_original_payment_id();
+				$nPaymentId = $aSubs[ 0 ]->get_original_payment_id();
+				( new EddFixEddPaymentTransactionId() )->fix( new \EDD_Payment( $nPaymentId ) );
 			}
 		}
 		return $nPaymentId;
