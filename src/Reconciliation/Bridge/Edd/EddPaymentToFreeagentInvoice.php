@@ -55,9 +55,13 @@ class EddPaymentToFreeagentInvoice {
 		}
 
 		$oInvoice = $oCreateInvoice->create();
-		$oPayment->update_meta( self::KEY_FREEAGENT_INVOICE_ID, $oInvoice->getId() );
-		sleep( 2 );
-		return $this->markInvoiceAsSent( $oInvoice );
+
+		if ( !is_null( $oInvoice ) ) {
+			$oPayment->update_meta( self::KEY_FREEAGENT_INVOICE_ID, $oInvoice->getId() );
+			sleep( 2 );
+			$oInvoice = $this->markInvoiceAsSent( $oInvoice );
+		}
+		return $oInvoice;
 	}
 
 	/**
@@ -113,7 +117,7 @@ class EddPaymentToFreeagentInvoice {
 				->setDescription( $aLineItem[ 'name' ] )
 				->setQuantity( $aLineItem[ 'quantity' ] )
 				->setPrice( $aLineItem[ 'subtotal' ] )
-				->setSalesTaxRate( $this->getPayment()->tax_rate*100 )
+				->setSalesTaxRate( (float)$this->getPayment()->tax_rate * 100 )
 				->setType( 'Years' ); //TODO: Hard coded, need to adapt to purchase
 		}
 		return $aInvoiceItems;
