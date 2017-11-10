@@ -5,6 +5,8 @@ namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\Ed
 use FernleafSystems\ApiWrappers\Base\ConnectionConsumer;
 use FernleafSystems\ApiWrappers\Freeagent\Entities;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\ContactVoConsumer;
+use FernleafSystems\WordPress\Integrations\Edd\Utilities\Entities\CartItemVo;
+use FernleafSystems\WordPress\Integrations\Edd\Utilities\GetTransactionIdFromCartItem;
 
 /**
  * Class EddPaymentToFreeagentInvoice
@@ -14,7 +16,6 @@ class EddPaymentToFreeagentInvoice {
 
 	use ConnectionConsumer,
 		ContactVoConsumer;
-	const KEY_FREEAGENT_INVOICE_ID = 'freeagent_invoice_id';
 
 	/**
 	 * @var \EDD_Payment
@@ -22,9 +23,10 @@ class EddPaymentToFreeagentInvoice {
 	private $oPayment;
 
 	/**
+	 * @param CartItemVo $oCartItem
 	 * @return Entities\Invoices\InvoiceVO|null
 	 */
-	public function createInvoice() {
+	public function createInvoiceForItem( $oCartItem ) {
 
 		$oContact = $this->getContactVo();
 		$oPayment = $this->getPayment();
@@ -35,18 +37,18 @@ class EddPaymentToFreeagentInvoice {
 			->setConnection( $this->getConnection() )
 			->setContact( $oContact )
 			->setDatedOn( $nDatedOn )
-			->setExchangeRate( 1.0 )// TODO: get the balance transaction from Stripe to be sure.
+			->setExchangeRate( 1.0 )// TODO: Verify this perhaps with Stripe Txn
 			->setPaymentTerms( 14 )
 			->setCurrency( $oPayment->currency )
 			->setComments(
 				serialize(
 					array(
-						'payment_id'        => $oPayment->ID,
-						'stripe_charge_ids' => $this->getTransactionIdsFromPayment()
+						'payment_id'       => $oPayment->ID,
+						'stripe_charge_id' => ( new GetTransactionIdFromCartItem() )->retrieve( $oCartItem )
 					)
 				)
 			)
-			->addInvoiceItemVOs( $this->buildLineItemsFromCart() );
+			->addInvoiceItemVOs( $this->buildLineItemsFromCartItem( $oCartItem ) );
 
 		if ( $this->isPaymentEuVatMossRegion() ) {
 			$oCreateInvoice->setEcPlaceOfSupply( $oContact->getCountry() )
@@ -59,7 +61,6 @@ class EddPaymentToFreeagentInvoice {
 		$oInvoice = $oCreateInvoice->create();
 
 		if ( !is_null( $oInvoice ) ) {
-			$oPayment->update_meta( self::KEY_FREEAGENT_INVOICE_ID, $oInvoice->getId() );
 			sleep( 2 );
 			$oInvoice = $this->markInvoiceAsSent( $oInvoice );
 		}
@@ -82,14 +83,6 @@ class EddPaymentToFreeagentInvoice {
 	}
 
 	/**
-	 * @return int
-	 */
-	protected function getLinkedFreeagentInvoiceId() {
-		return $this->getPayment()
-					->get_meta( self::KEY_FREEAGENT_INVOICE_ID );
-	}
-
-	/**
 	 * @return string[]
 	 */
 	protected function getTransactionIdsFromPayment() {
@@ -107,21 +100,19 @@ class EddPaymentToFreeagentInvoice {
 	}
 
 	/**
+	 * @param CartItemVo $oCartItem
 	 * @return Entities\Invoices\Items\InvoiceItemVO[]
 	 */
-	protected function buildLineItemsFromCart() {
+	protected function buildLineItemsFromCartItem( $oCartItem ) {
 		$aInvoiceItems = array();
 
-		// Add purchased items to invoice
-		foreach ( edd_get_payment_meta_cart_details( $this->getPayment()->ID ) as $aLineItem ) {
+		$aInvoiceItems[] = ( new Entities\Invoices\Items\InvoiceItemVO() )
+			->setDescription( $oCartItem->getName() )
+			->setQuantity( $oCartItem->getQuantity() )
+			->setPrice( $oCartItem->getSubtotal() )
+			->setSalesTaxRate( $oCartItem->getTaxRate()*100 )
+			->setType( 'Years' ); //TODO: Hard coded, need to adapt to purchase
 
-			$aInvoiceItems[] = ( new Entities\Invoices\Items\InvoiceItemVO() )
-				->setDescription( $aLineItem[ 'name' ] )
-				->setQuantity( $aLineItem[ 'quantity' ] )
-				->setPrice( $aLineItem[ 'subtotal' ] )
-				->setSalesTaxRate( (float)$this->getPayment()->tax_rate * 100 )
-				->setType( 'Years' ); //TODO: Hard coded, need to adapt to purchase
-		}
 		return $aInvoiceItems;
 	}
 
