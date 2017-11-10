@@ -4,15 +4,15 @@ namespace FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\Ed
 
 use FernleafSystems\ApiWrappers\Base\ConnectionConsumer;
 use FernleafSystems\ApiWrappers\Freeagent\Entities;
+use FernleafSystems\Integrations\Edd\Entities\CartItemVo;
+use FernleafSystems\Integrations\Edd\Utilities\GetTransactionIdFromCartItem;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\ContactVoConsumer;
-use FernleafSystems\WordPress\Integrations\Edd\Utilities\Entities\CartItemVo;
-use FernleafSystems\WordPress\Integrations\Edd\Utilities\GetTransactionIdFromCartItem;
 
 /**
  * Class EddPaymentToFreeagentInvoice
  * @package FernleafSystems\Wordpress\Plugin\Edd\Freeagent\Adaptation
  */
-class EddPaymentToFreeagentInvoice {
+class EddPaymentItemToFreeagentInvoice {
 
 	use ConnectionConsumer,
 		ContactVoConsumer;
@@ -26,7 +26,7 @@ class EddPaymentToFreeagentInvoice {
 	 * @param CartItemVo $oCartItem
 	 * @return Entities\Invoices\InvoiceVO|null
 	 */
-	public function createInvoiceForItem( $oCartItem ) {
+	public function createInvoice( $oCartItem ) {
 
 		$oContact = $this->getContactVo();
 		$oPayment = $this->getPayment();

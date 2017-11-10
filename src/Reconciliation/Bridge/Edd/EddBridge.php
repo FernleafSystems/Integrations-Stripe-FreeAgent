@@ -6,12 +6,12 @@ use FernleafSystems\ApiWrappers\Base\ConnectionConsumer;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Contacts\ContactVO;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Invoices\InvoiceVO;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Invoices\Retrieve;
+use FernleafSystems\Integrations\Edd\Entities\CartItemVo;
+use FernleafSystems\Integrations\Edd\Utilities\GetCartItemsFromTransactionId;
+use FernleafSystems\Integrations\Edd\Utilities\GetEddPaymentFromTransactionId;
+use FernleafSystems\Integrations\Edd\Utilities\GetTransactionIdFromCartItem;
+use FernleafSystems\Integrations\Edd\Utilities\GetTransactionIdsFromPayment;
 use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\BridgeInterface;
-use FernleafSystems\WordPress\Integrations\Edd\Utilities\Entities\CartItemVo;
-use FernleafSystems\WordPress\Integrations\Edd\Utilities\GetCartItemsFromTransactionId;
-use FernleafSystems\WordPress\Integrations\Edd\Utilities\GetEddPaymentFromTransactionId;
-use FernleafSystems\WordPress\Integrations\Edd\Utilities\GetTransactionIdFromCartItem;
-use FernleafSystems\WordPress\Integrations\Edd\Utilities\GetTransactionIdsFromPayment;
 use Stripe\BalanceTransaction;
 
 class EddBridge implements BridgeInterface {
@@ -86,11 +86,11 @@ class EddBridge implements BridgeInterface {
 		}
 
 		if ( empty( $oInvoice ) ) {
-			$oInvoice = ( new EddPaymentToFreeagentInvoice() )
+			$oInvoice = ( new EddPaymentItemToFreeagentInvoice() )
 				->setConnection( $this->getConnection() )
 				->setContactVo( $oContact )
 				->setPayment( $oEddPayment )
-				->createInvoiceForItem( $oCartItem );
+				->createInvoice( $oCartItem );
 
 			if ( !is_null( $oInvoice ) ) {
 				$aInvoiceIds[ $sTxnId ] = $oInvoice->getId();
