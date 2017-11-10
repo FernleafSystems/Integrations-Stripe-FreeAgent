@@ -16,46 +16,16 @@ interface BridgeInterface {
 	public function createFreeagentContact( $oBalTxn, $bUpdateOnly = false );
 
 	/**
-	 * @param BalanceTransaction $oBalTxn
+	 * @param string $sChargeTxnId
 	 * @return InvoiceVO
 	 */
-	public function createFreeagentInvoiceFromStripeBalanceTxn( $oBalTxn );
-
-	/**
-	 * @param BalanceTransaction $oStripeTxn
-	 * @return \EDD_Payment
-	 */
-	public function getEddPaymentFromStripeBalanceTxn( $oStripeTxn );
-
-	/**
-	 * @param \EDD_Payment $oEddPayment
-	 * @return int
-	 */
-	public function getFreeagentContactIdFromEddPayment( $oEddPayment );
+	public function createFreeagentInvoiceFromStripeBalanceTxn( $sChargeTxnId );
 
 	/**
 	 * @param BalanceTransaction $oStripeTxn
 	 * @return int
 	 */
 	public function getFreeagentContactIdFromStripeBalTxn( $oStripeTxn );
-
-	/**
-	 * @param \EDD_Payment $oEddPayment
-	 * @return \EDD_Customer
-	 */
-	public function getEddCustomerFromEddPayment( $oEddPayment );
-
-	/**
-	 * @param BalanceTransaction $oStripeTxn
-	 * @return \EDD_Customer
-	 */
-	public function getEddCustomerFromStripeTxn( $oStripeTxn );
-
-	/**
-	 * @param \EDD_Payment $oEddPayment
-	 * @return int
-	 */
-	public function getFreeagentInvoiceIdFromEddPayment( $oEddPayment );
 
 	/**
 	 * @param BalanceTransaction $oStripeTxn

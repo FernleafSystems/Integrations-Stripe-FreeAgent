@@ -7,11 +7,17 @@ use FernleafSystems\ApiWrappers\Freeagent\Entities\Contacts\ContactVO;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Invoices\InvoiceVO;
 use FernleafSystems\ApiWrappers\Freeagent\Entities\Invoices\Retrieve;
 use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\BridgeInterface;
+use FernleafSystems\WordPress\Integrations\Edd\Utilities\Entities\CartItemVo;
+use FernleafSystems\WordPress\Integrations\Edd\Utilities\GetCartItemsFromTransactionId;
+use FernleafSystems\WordPress\Integrations\Edd\Utilities\GetEddPaymentFromTransactionId;
+use FernleafSystems\WordPress\Integrations\Edd\Utilities\GetTransactionIdFromCartItem;
+use FernleafSystems\WordPress\Integrations\Edd\Utilities\GetTransactionIdsFromPayment;
 use Stripe\BalanceTransaction;
 
 class EddBridge implements BridgeInterface {
 
 	use ConnectionConsumer;
+	const KEY_FREEAGENT_INVOICE_IDS = 'freeagent_invoice_ids';
 
 	public function __construct() {
 		EDD_Recurring(); // initializes anything that's required
@@ -31,26 +37,47 @@ class EddBridge implements BridgeInterface {
 	}
 
 	/**
-	 * @param BalanceTransaction $oBalTxn
+	 * @param string $sChargeTxnId
 	 * @return InvoiceVO
 	 */
-	public function createFreeagentInvoiceFromStripeBalanceTxn( $oBalTxn ) {
-		return $this->createFreeagentInvoiceFromEddPayment(
-			$this->getEddPaymentFromStripeBalanceTxn( $oBalTxn )
+	public function createFreeagentInvoiceFromStripeBalanceTxn( $sChargeTxnId ) {
+		return $this->createFreeagentInvoiceFromEddPaymentCartItem(
+			$this->getCartItemDetailsFromStripeBalanceTxn( $sChargeTxnId )
 		);
 	}
 
 	/**
+	 * @param string $sStripeChargeTxnId
+	 * @return CartItemVo
+	 * @throws \Exception
+	 */
+	protected function getCartItemDetailsFromStripeBalanceTxn( $sStripeChargeTxnId ) {
+		$aCartItems = ( new GetCartItemsFromTransactionId() )->retrieve( $sStripeChargeTxnId );
+		if ( count( $aCartItems ) != 1 ) { // TODO - if we offer non-subscription items!
+			throw new \Exception( sprintf( 'Found more than 1 cart item for a Stripe Txn "%s"', $sStripeChargeTxnId ) );
+		}
+		return $aCartItems[ 0 ];
+	}
+
+	/**
 	 * First attempts to locate a previously created invoice for this Payment.
-	 * @param \EDD_Payment $oPayment
+	 * @param CartItemVo $oCartItem
 	 * @return InvoiceVO
 	 */
-	public function createFreeagentInvoiceFromEddPayment( $oPayment ) {
-		$nContactId = $this->getFreeagentContactIdFromEddPayment( $oPayment );
-		$oContact = $this->createFreeagentContact( $oPayment, !empty( $nContactId ) );
-
+	public function createFreeagentInvoiceFromEddPaymentCartItem( $oCartItem ) {
 		$oInvoice = null;
-		$nInvoiceId = $this->getFreeagentInvoiceIdFromEddPayment( $oPayment );
+
+		$oEddPayment = new \EDD_Payment( $oCartItem->getParentPaymentId() );
+
+		// 1st: Create/update the FreeAgent Contact.
+		$nContactId = $this->getFreeagentContactIdFromEddPayment( $oEddPayment );
+		$oContact = $this->createFreeagentContact( $oEddPayment, !empty( $nContactId ) );
+
+		// 2nd: Retrieve/Create FreeAgent Invoice
+		$sTxnId = ( new GetTransactionIdFromCartItem() )->retrieve( $oCartItem );
+		$aInvoiceIds = $this->getFreeagentInvoiceIdsFromEddPayment( $oEddPayment );
+
+		$nInvoiceId = isset( $aInvoiceIds[ $sTxnId ] ) ? $aInvoiceIds[ $sTxnId ] : null;
 		if ( !empty( $nInvoiceId ) ) {
 			$oInvoice = ( new Retrieve() )
 				->setConnection( $this->getConnection() )
@@ -62,39 +89,29 @@ class EddBridge implements BridgeInterface {
 			$oInvoice = ( new EddPaymentToFreeagentInvoice() )
 				->setConnection( $this->getConnection() )
 				->setContactVo( $oContact )
-				->setPayment( $oPayment )
-				->createInvoice();
+				->setPayment( $oEddPayment )
+				->createInvoiceForItem( $oCartItem );
+
+			if ( !is_null( $oInvoice ) ) {
+				$aInvoiceIds[ $sTxnId ] = $oInvoice->getId();
+				$oEddPayment->update_meta( self::KEY_FREEAGENT_INVOICE_IDS, $aInvoiceIds );
+			}
 		}
 		return $oInvoice;
 	}
 
 	/**
-	 * @param BalanceTransaction $oStripeTxn
-	 * @return \EDD_Payment|null
+	 * First attempts to locate a previously created invoice for this Payment.
+	 * @param \EDD_Payment $oPayment
+	 * @return InvoiceVO[]
 	 */
-	public function getEddPaymentFromStripeBalanceTxn( $oStripeTxn ) {
-		$nPaymentId = $this->getInternalPaymentIdFromStripeBalanceTransaction( $oStripeTxn );
-		return ( $nPaymentId == 0 ) ? null : new \EDD_Payment( $nPaymentId );
-	}
-
-	/**
-	 * @param BalanceTransaction $oStripeTxn
-	 * @return int
-	 */
-	protected function getInternalPaymentIdFromStripeBalanceTransaction( $oStripeTxn ) {
-		$nPaymentId = edd_get_purchase_id_by_transaction_id( $oStripeTxn->source );
-		if ( empty( $nPaymentId ) ) {
-			// It wasn't populated so we try looking up the subscrptions.
-			$aSubs = $this->getInternalSubscriptionsForStripeTxn( $oStripeTxn );
-			if ( empty( $aSubs ) ) {
-				$nPaymentId = 0;
-			}
-			else {
-				$nPaymentId = $aSubs[ 0 ]->get_original_payment_id();
-				( new EddFixEddPaymentTransactionId() )->fix( new \EDD_Payment( $nPaymentId ) );
-			}
-		}
-		return $nPaymentId;
+	public function createFreeagentInvoicesFromEddPayment( $oPayment ) {
+		return array_map(
+			function ( $sTxnId ) { /** @var string $sTxnId */
+				return $this->createFreeagentInvoiceFromStripeBalanceTxn( $sTxnId );
+			},
+			( new GetTransactionIdsFromPayment() )->retrieve( $oPayment )
+		);
 	}
 
 	/**
@@ -110,18 +127,16 @@ class EddBridge implements BridgeInterface {
 	 * @param \EDD_Payment $oEddPayment
 	 * @return \EDD_Customer
 	 */
-	public function getEddCustomerFromEddPayment( $oEddPayment ) {
+	private function getEddCustomerFromEddPayment( $oEddPayment ) {
 		return new \EDD_Customer( $oEddPayment->customer_id );
 	}
 
 	/**
 	 * @param BalanceTransaction $oStripeTxn
-	 * @return \EDD_Customer
+	 * @return \EDD_Payment|null
 	 */
-	public function getEddCustomerFromStripeTxn( $oStripeTxn ) {
-		return $this->getEddCustomerFromEddPayment(
-			$this->getEddPaymentFromStripeBalanceTxn( $oStripeTxn )
-		);
+	private function getEddPaymentFromStripeBalanceTxn( $oStripeTxn ) {
+		return ( new GetEddPaymentFromTransactionId() )->retrieve( $oStripeTxn->source );
 	}
 
 	/**
@@ -145,10 +160,11 @@ class EddBridge implements BridgeInterface {
 
 	/**
 	 * @param \EDD_Payment $oEddPayment
-	 * @return int
+	 * @return array
 	 */
-	public function getFreeagentInvoiceIdFromEddPayment( $oEddPayment ) {
-		return $oEddPayment->get_meta( 'freeagent_invoice_id' );
+	public function getFreeagentInvoiceIdsFromEddPayment( $oEddPayment ) {
+		$aIds = $oEddPayment->get_meta( self::KEY_FREEAGENT_INVOICE_IDS );
+		return is_array( $aIds ) ? $aIds : array();
 	}
 
 	/**
@@ -156,9 +172,10 @@ class EddBridge implements BridgeInterface {
 	 * @return int
 	 */
 	public function getFreeagentInvoiceIdFromStripeBalanceTxn( $oStripeTxn ) {
-		return $this->getFreeagentInvoiceIdFromEddPayment(
+		$aIds = $this->getFreeagentInvoiceIdsFromEddPayment(
 			$this->getEddPaymentFromStripeBalanceTxn( $oStripeTxn )
 		);
+		return isset( $aIds[ $oStripeTxn->source ] ) ? $aIds[ $oStripeTxn->source ] : null;
 	}
 
 	/**
@@ -166,6 +183,6 @@ class EddBridge implements BridgeInterface {
 	 * @return bool
 	 */
 	public function verifyStripeToInternalPaymentLink( $oStripeTxn ) {
-		return ( $this->getInternalPaymentIdFromStripeBalanceTransaction( $oStripeTxn ) > 0 );
+		return !is_null( $this->getEddPaymentFromStripeBalanceTxn( $oStripeTxn ) );
 	}
 }

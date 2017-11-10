@@ -10,14 +10,18 @@
   ],
   "license":      "MIT",
   "keywords":     [
-	"Integration", "FreeAgent", "Stripe", "Easy Digital Downloads"
+	"Integration",
+	"FreeAgent",
+	"Stripe",
+	"Easy Digital Downloads"
   ],
   "repositories": [
   ],
   "require":      {
-	"php":                                   ">=5.6.0",
-	"fernleafsystems/apiwrappers-freeagent": "~0.0.18",
-	"stripe/stripe-php":                     "^5.0.0"
+	"php":                                                  ">=5.6.0",
+	"fernleafsystems/apiwrappers-freeagent":                "~0.0.18",
+	"fernleafsystems/wordpress-integrations-edd-utilities": "~0.1.0",
+	"stripe/stripe-php":                                    "^5.0.0"
   },
   "require-dev":  {
   },
