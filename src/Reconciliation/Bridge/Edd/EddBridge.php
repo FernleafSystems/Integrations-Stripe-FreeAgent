@@ -56,7 +56,7 @@ class EddBridge implements BridgeInterface {
 		if ( count( $aCartItems ) != 1 ) { // TODO - if we offer non-subscription items!
 			throw new \Exception( sprintf( 'Found more than 1 cart item for a Stripe Txn "%s"', $sStripeChargeTxnId ) );
 		}
-		return $aCartItems[ 0 ];
+		return array_pop( $aCartItems );
 	}
 
 	/**
