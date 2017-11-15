@@ -50,13 +50,12 @@ class CreateForStripePayout {
 			->count();
 
 		/** @var ContactVO $oStripeContact */
-		$nContactId = $oFaConfig->getStripeContactId();
 		$oStripeContact = ( new Retrieve() )
 			->setConnection( $this->getConnection() )
-			->setEntityId( $nContactId )
-			->sendRequestWithVoResponse();
-		if ( $oStripeContact ) {
-			throw new \Exception( sprintf( 'Failed to load FreeAgent Contact bill for Stripe with ID "%s" ', $nContactId ) );
+			->setEntityId( $oFaConfig->getStripeContactId() )
+			->retrieve();
+		if ( empty( $oStripeContact ) ) {
+			throw new \Exception( sprintf( 'Failed to load FreeAgent Contact bill for Stripe with ID "%s" ', $oFaConfig->getStripeContactId() ) );
 		}
 
 		$aComments = array(
