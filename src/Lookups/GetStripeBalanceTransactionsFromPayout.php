@@ -3,9 +3,7 @@
 namespace FernleafSystems\Integrations\Stripe_Freeagent\Lookups;
 
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
-use FernleafSystems\Integrations\Stripe_Freeagent\DataWrapper\StripeEventPayoutPaidSummary;
 use Stripe\BalanceTransaction;
-use Stripe\Charge;
 use Stripe\Collection;
 
 /**
@@ -28,35 +26,15 @@ class GetStripeBalanceTransactionsFromPayout {
 	 * @throws \Exception
 	 */
 	public function retrieve() {
-		$oPayout = $this->getStripePayout();
-		$oPayoutSummary = ( new StripeEventPayoutPaidSummary() )
-			->setRawData( $oPayout->summary );
-
-		$nExpectedAmount = $oPayout->amount;
-		if ( $oPayoutSummary->getAdjustmentFees() != 0 ) {
-			$nExpectedAmount += $oPayoutSummary->getAdjustmentFees();
-		}
-		if ( $oPayoutSummary->getAdjustmentGross() != 0 ) {
-			$nExpectedAmount += ( $oPayoutSummary->getAdjustmentGross()*-1 );
-		}
-
-		$bProcessRefunds = ( $oPayoutSummary->getRefundsGross() != 0 );
-
-		$nTotalTally = 0;
-
 		$aBalanceTxns = array();
 
+		$nExpectedAmount = $this->getStripePayout()->amount;
+
+		$nTotalTally = 0;
 		$oBalTxn_Collection = $this->sendRequest();
 		/** @var BalanceTransaction $oBalTxn */
 		foreach ( $oBalTxn_Collection->autoPagingIterator() as $oBalTxn ) {
 
-			if ( $bProcessRefunds ) {
-				usleep( 500 ); // Lookup the charge via the source
-				$oStripeCharge = Charge::retrieve( $oBalTxn->source );
-				if ( $oStripeCharge->refunded ) {
-					continue;
-				}
-			}
 			$nTotalTally += $oBalTxn->net;
 			$aBalanceTxns[] = $oBalTxn;
 		}
@@ -73,10 +51,9 @@ class GetStripeBalanceTransactionsFromPayout {
 	 * @return Collection
 	 */
 	protected function sendRequest( $aParams = array() ) {
-		$oPayout = $this->getStripePayout();
 		$aRequest = array_merge(
 			array(
-				'payout' => $oPayout->id,
+				'payout' => $this->getStripePayout()->id,
 				'type'   => $this->getTransactionType(),
 				'limit'  => 20
 			),
