@@ -6,6 +6,7 @@ use FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
 
 /**
  * Class StripeEventPayoutPaidSummary
+ * @deprecated for use in older API versions
  * @package FernleafSystems\Integrations\Stripe_Freeagent\DataWrapper
  */
 class StripeEventPayoutPaidSummary {
