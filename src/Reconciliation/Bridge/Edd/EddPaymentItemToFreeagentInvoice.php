@@ -7,6 +7,7 @@ use FernleafSystems\ApiWrappers\Freeagent\Entities;
 use FernleafSystems\Integrations\Edd\Entities\CartItemVo;
 use FernleafSystems\Integrations\Edd\Utilities\GetTransactionIdFromCartItem;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\ContactVoConsumer;
+use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\FreeagentConfigVoConsumer;
 
 /**
  * Class EddPaymentToFreeagentInvoice
@@ -15,7 +16,8 @@ use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\ContactVoConsumer;
 class EddPaymentItemToFreeagentInvoice {
 
 	use ConnectionConsumer,
-		ContactVoConsumer;
+		ContactVoConsumer,
+		FreeagentConfigVoConsumer;
 
 	/**
 	 * @var \EDD_Payment
@@ -111,6 +113,7 @@ class EddPaymentItemToFreeagentInvoice {
 			->setQuantity( $oCartItem->getQuantity() )
 			->setPrice( $oCartItem->getSubtotal() )
 			->setSalesTaxRate( $oCartItem->getTaxRate()*100 )
+			->setCategoryId( $this->getFreeagentConfigVO()->getInvoiceItemCategoryId() )
 			->setType( 'Years' ); //TODO: Hard coded, need to adapt to purchase
 
 		return $aInvoiceItems;

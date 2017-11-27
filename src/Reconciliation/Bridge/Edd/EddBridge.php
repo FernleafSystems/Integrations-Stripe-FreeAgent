@@ -11,12 +11,15 @@ use FernleafSystems\Integrations\Edd\Utilities\GetCartItemsFromTransactionId;
 use FernleafSystems\Integrations\Edd\Utilities\GetEddPaymentFromTransactionId;
 use FernleafSystems\Integrations\Edd\Utilities\GetTransactionIdFromCartItem;
 use FernleafSystems\Integrations\Edd\Utilities\GetTransactionIdsFromPayment;
+use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\FreeagentConfigVoConsumer;
 use FernleafSystems\Integrations\Stripe_Freeagent\Reconciliation\Bridge\BridgeInterface;
 use Stripe\BalanceTransaction;
 
 class EddBridge implements BridgeInterface {
 
-	use ConnectionConsumer;
+	use ConnectionConsumer,
+		FreeagentConfigVoConsumer;
+
 	const KEY_FREEAGENT_INVOICE_IDS = 'freeagent_invoice_ids';
 
 	public function __construct() {
@@ -87,6 +90,7 @@ class EddBridge implements BridgeInterface {
 
 		if ( empty( $oInvoice ) ) {
 			$oInvoice = ( new EddPaymentItemToFreeagentInvoice() )
+				->setFreeagentConfigVO( $this->getFreeagentConfigVO() )
 				->setConnection( $this->getConnection() )
 				->setContactVo( $oContact )
 				->setPayment( $oEddPayment )
