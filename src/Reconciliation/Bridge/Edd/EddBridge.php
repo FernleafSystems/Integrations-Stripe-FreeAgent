@@ -106,12 +106,12 @@ class EddBridge implements BridgeInterface {
 	 * @return InvoiceVO[]
 	 */
 	public function createFreeagentInvoicesFromEddPayment( $oPayment ) {
-		return array_map(
+		return array_filter( array_map(
 			function ( $sTxnId ) { /** @var string $sTxnId */
 				return $this->createFreeagentInvoiceFromStripeBalanceTxn( $sTxnId );
 			},
 			( new GetTransactionIdsFromPayment() )->retrieve( $oPayment )
-		);
+		) );
 	}
 
 	/**
