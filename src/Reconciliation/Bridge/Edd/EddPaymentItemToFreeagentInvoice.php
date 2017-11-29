@@ -31,21 +31,21 @@ class EddPaymentItemToFreeagentInvoice {
 	public function createInvoice( $oCartItem ) {
 
 		$oContact = $this->getContactVo();
-		$oPayment = $this->getPayment();
+		$oLocalPayment = $this->getPayment();
 
-		$nDatedOn = empty( $oPayment->date ) ? time() : strtotime( $oPayment->date );
+		$nDatedOn = empty( $oLocalPayment->date ) ? time() : strtotime( $oLocalPayment->date );
 
-		$oCreateInvoice = ( new Entities\Invoices\Create() )
+		$oInvoiceCreator = ( new Entities\Invoices\Create() )
 			->setConnection( $this->getConnection() )
 			->setContact( $oContact )
 			->setDatedOn( $nDatedOn )
-			->setExchangeRate( 1.0 )// TODO: Verify this perhaps with Stripe Txn
 			->setPaymentTerms( 14 )
-			->setCurrency( $oPayment->currency )
+			->setExchangeRate( 1.0 )// TODO: Verify this perhaps with Stripe Txn
+			->setCurrency( $oLocalPayment->currency )
 			->setComments(
 				serialize(
 					array(
-						'payment_id'       => $oPayment->ID,
+						'payment_id'       => $oLocalPayment->ID,
 						'stripe_charge_id' => ( new GetTransactionIdFromCartItem() )->retrieve( $oCartItem )
 					)
 				)
@@ -53,20 +53,20 @@ class EddPaymentItemToFreeagentInvoice {
 			->addInvoiceItemVOs( $this->buildLineItemsFromCartItem( $oCartItem ) );
 
 		if ( $this->isPaymentEuVatMossRegion() ) {
-			$oCreateInvoice->setEcPlaceOfSupply( $oContact->getCountry() )
+			$oInvoiceCreator->setEcPlaceOfSupply( $oContact->getCountry() )
 						   ->setEcStatusVatMoss();
 		}
 		else {
-			$oCreateInvoice->setEcStatusNonEc();
+			$oInvoiceCreator->setEcStatusNonEc();
 		}
 
-		$oInvoice = $oCreateInvoice->create();
+		$oExportedInvoice = $oInvoiceCreator->create();
 
-		if ( !is_null( $oInvoice ) ) {
+		if ( !is_null( $oExportedInvoice ) ) {
 			sleep( 2 );
-			$oInvoice = $this->markInvoiceAsSent( $oInvoice );
+			$oExportedInvoice = $this->markInvoiceAsSent( $oExportedInvoice );
 		}
-		return $oInvoice;
+		return $oExportedInvoice;
 	}
 
 	/**
@@ -81,7 +81,7 @@ class EddPaymentItemToFreeagentInvoice {
 		return ( new Entities\Invoices\Retrieve() )
 			->setConnection( $this->getConnection() )
 			->setEntityId( $oInvoice->getId() )
-			->sendRequestWithVoResponse();
+			->retrieve();
 	}
 
 	/**

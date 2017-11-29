@@ -22,10 +22,10 @@ interface BridgeInterface {
 	public function createFreeagentInvoiceFromStripeBalanceTxn( $sChargeTxnId );
 
 	/**
-	 * @param BalanceTransaction $oStripeTxn
+	 * @param BalanceTransaction $oBalTxn
 	 * @return int
 	 */
-	public function getFreeagentContactIdFromStripeBalTxn( $oStripeTxn );
+	public function getFreeagentContactIdFromStripeBalTxn( $oBalTxn );
 
 	/**
 	 * @param BalanceTransaction $oStripeTxn
