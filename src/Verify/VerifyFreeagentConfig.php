@@ -21,18 +21,26 @@ class VerifyFreeagentConfig {
 	public function verify( $oFreeAgentConfig ) {
 		$oCon = $this->getConnection();
 
+		$oCompany = ( new Entities\Company\Retrieve() )
+			->setConnection( $oCon )
+			->retrieve();
+
+		$bValid = !empty( $oCompany );
+
 		$nStripeContactID = $oFreeAgentConfig->getStripeContactId();
-		$bValid = $nStripeContactID > 0 &&
+		$bValid = $bValid && ( $nStripeContactID > 0 ) &&
 				  ( new Entities\Contacts\Retrieve() )
-					  ->setConnection( $this->getConnection() )
+					  ->setConnection( $oCon )
 					  ->setEntityId( $oFreeAgentConfig->getStripeContactId() )
 					  ->exists();
 
-		$nApiUserPermissionLevel = ( new Entities\Users\RetrieveMe() )
-			->setConnection( $oCon )
-			->retrieve()
-			->getPermissionLevel();
-		$bValid = $bValid && ( $nApiUserPermissionLevel >= 6 ); // at least Banking level
+		if ( $bValid ) {
+			$nApiUserPermissionLevel = ( new Entities\Users\RetrieveMe() )
+				->setConnection( $oCon )
+				->retrieve()
+				->getPermissionLevel();
+			$bValid = ( $nApiUserPermissionLevel >= 6 ); // at least Banking level
+		}
 
 		$bValid = $bValid && ( new Entities\Categories\Retrieve() )
 				->setConnection( $oCon )
