@@ -25,25 +25,29 @@ class GetStripeBalanceTransactionsFromPayout {
 	 * @return BalanceTransaction[]
 	 * @throws \Exception
 	 */
-	public function retrieve( $bCollectRefunds = false ) {
+	public function retrieve() {
+		/** @var BalanceTransaction[] $aBalanceTxns */
 		$aBalanceTxns = array();
 
 		$nExpectedAmount = $this->getStripePayout()->amount;
 
+		/** @var BalanceTransaction[] $aRefundedCharges */
+		$aRefundedCharges = array();
+
 		$nTotalTally = 0;
 		$oBalTxn_Collection = $this->sendRequest();
-		/** @var BalanceTransaction $oBalTxn */
-		foreach ( $oBalTxn_Collection->autoPagingIterator() as $oBalTxn ) {
+		/** @var BalanceTransaction $oTxn */
+		foreach ( $oBalTxn_Collection->autoPagingIterator() as $oTxn ) {
 
-			if ( $oBalTxn->type == 'charge' ) {
-				$nTotalTally += $oBalTxn->net;
+			if ( $oTxn->type != 'payout' ) {
+				$nTotalTally += $oTxn->net;
 			}
-			else {
-				$nTotalTally -= $oBalTxn->net;
+
+			if ( $oTxn->type == 'refund' ) {
+				$aRefundedCharges[] = $oTxn;
 			}
-			
-			if ( $oBalTxn->type == 'charge' || $bCollectRefunds ) {
-				$aBalanceTxns[] = $oBalTxn;
+			else if ( $oTxn->type == 'charge' ) {
+				$aBalanceTxns[] = $oTxn;
 			}
 		}
 
@@ -51,7 +55,16 @@ class GetStripeBalanceTransactionsFromPayout {
 			throw new \Exception( sprintf( 'Total tally %s does not match transfer amount %s', $nTotalTally, $nExpectedAmount ) );
 		}
 
-		return $aBalanceTxns;
+		// Now we remove any refunded charges TODO: assumes WHOLE charge refunds
+		foreach ( $aRefundedCharges as $oRefundTxn ) {
+			foreach ( $aBalanceTxns as $nKey => $oBalTxn ) {
+				if ( $oRefundTxn->source == $oBalTxn->source ) {
+					unset( $aBalanceTxns[ $nKey ] );
+				}
+			}
+		}
+
+		return array_values( $aBalanceTxns );
 	}
 
 	/**
@@ -62,7 +75,7 @@ class GetStripeBalanceTransactionsFromPayout {
 		$aRequest = array_merge(
 			array(
 				'payout' => $this->getStripePayout()->id,
-				'type'   => $this->getTransactionType(),
+				//				'type'   => $this->getTransactionType(),
 				'limit'  => 20
 			),
 			$aParams
