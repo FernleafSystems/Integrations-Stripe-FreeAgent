@@ -25,7 +25,7 @@ class GetStripeBalanceTransactionsFromPayout {
 	 * @return BalanceTransaction[]
 	 * @throws \Exception
 	 */
-	public function retrieve() {
+	public function retrieve( $bCollectRefunds = false ) {
 		$aBalanceTxns = array();
 
 		$nExpectedAmount = $this->getStripePayout()->amount;
@@ -35,8 +35,16 @@ class GetStripeBalanceTransactionsFromPayout {
 		/** @var BalanceTransaction $oBalTxn */
 		foreach ( $oBalTxn_Collection->autoPagingIterator() as $oBalTxn ) {
 
-			$nTotalTally += $oBalTxn->net;
-			$aBalanceTxns[] = $oBalTxn;
+			if ( $oBalTxn->type == 'charge' ) {
+				$nTotalTally += $oBalTxn->net;
+			}
+			else {
+				$nTotalTally -= $oBalTxn->net;
+			}
+			
+			if ( $oBalTxn->type == 'charge' || $bCollectRefunds ) {
+				$aBalanceTxns[] = $oBalTxn;
+			}
 		}
 
 		if ( $nTotalTally != $nExpectedAmount ) {
