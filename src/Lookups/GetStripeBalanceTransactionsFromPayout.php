@@ -39,15 +39,16 @@ class GetStripeBalanceTransactionsFromPayout {
 		/** @var BalanceTransaction $oTxn */
 		foreach ( $oBalTxn_Collection->autoPagingIterator() as $oTxn ) {
 
-			if ( $oTxn->type != 'payout' ) {
+			// do not do 'payout' / 'transfer'
+			if ( in_array( $oTxn->type, array( 'charge', 'refund' ) ) ) {
 				$nTotalTally += $oTxn->net;
-			}
 
-			if ( $oTxn->type == 'refund' ) {
-				$aRefundedCharges[] = $oTxn;
-			}
-			else if ( $oTxn->type == 'charge' ) {
-				$aBalanceTxns[] = $oTxn;
+				if ( $oTxn->type == 'refund' ) {
+					$aRefundedCharges[] = $oTxn;
+				}
+				else if ( $oTxn->type == 'charge' ) {
+					$aBalanceTxns[] = $oTxn;
+				}
 			}
 		}
 
