@@ -16,10 +16,6 @@
     "Easy Digital Downloads"
   ],
   "repositories": [
-    {
-      "type": "vcs",
-      "url":  "https://github.com/FernleafSystems/Integrations-FreeAgent"
-    }
   ],
   "require":      {
     "php":                                    ">=5.6.0",
