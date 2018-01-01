@@ -28,4 +28,13 @@ abstract class StripeBridge implements Freeagent\Reconciliation\Bridge\BridgeInt
 					   ->setDate( $oStripeCharge->created )
 					   ->setCurrency( $oStripeCharge->currency );
 	}
+
+	/**
+	 * @param string $sPayoutId
+	 * @return Freeagent\DataWrapper\PayoutVO
+	 */
+	public function buildPayoutFromId( $sPayoutId ) {
+		$oPayout = new Freeagent\DataWrapper\PayoutVO();
+		return $oPayout;
+	}
 }
