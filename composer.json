@@ -18,10 +18,11 @@
   "repositories": [
   ],
   "require":      {
-    "php":                                   ">=5.6.0",
-    "fernleafsystems/apiwrappers-freeagent": "~0.1.3",
-    "stripe/stripe-php":                     "^5.0.0",
-    "ultraleet/currency-rates":              "~1.2.0"
+    "php":                                    ">=5.6.0",
+    "fernleafsystems/apiwrappers-freeagent":  "~0.1.3",
+    "stripe/stripe-php":                      "^5.0.0",
+    "ultraleet/currency-rates":               "~1.2.0",
+    "fernleafsystems/integrations-freeagent": "dev-develop"
   },
   "require-dev":  {
   },
