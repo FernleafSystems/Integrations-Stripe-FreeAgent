@@ -26,9 +26,9 @@ abstract class StripeBridge implements Freeagent\Reconciliation\Bridge\BridgeInt
 		return $oCharge->setId( $sTxnID )
 					   ->setGateway( 'stripe' )
 					   ->setPaymentTerms( 14 )
-					   ->setAmount_Gross( $oBalTxn->amount )
-					   ->setAmount_Fee( $oBalTxn->fee )
-					   ->setAmount_Net( $oBalTxn->net )
+					   ->setAmount_Gross( $oBalTxn->amount/100 )
+					   ->setAmount_Fee( $oBalTxn->fee/100 )
+					   ->setAmount_Net( $oBalTxn->net/100 )
 					   ->setDate( $oStripeCharge->created )
 					   ->setCurrency( $oStripeCharge->currency );
 	}
@@ -89,7 +89,7 @@ abstract class StripeBridge implements Freeagent\Reconciliation\Bridge\BridgeInt
 	}
 
 	/**
-	 * @param Freeagent\DataWrapper\PayoutVO                        $oPayoutVO
+	 * @param Freeagent\DataWrapper\PayoutVO              $oPayoutVO
 	 * @param Entities\BankTransactions\BankTransactionVO $oBankTxn
 	 * @return $this
 	 */
@@ -101,8 +101,8 @@ abstract class StripeBridge implements Freeagent\Reconciliation\Bridge\BridgeInt
 	}
 
 	/**
-	 * @param Freeagent\DataWrapper\PayoutVO  $oPayoutVO
-	 * @param Entities\Bills\BillVO $oBill
+	 * @param Freeagent\DataWrapper\PayoutVO $oPayoutVO
+	 * @param Entities\Bills\BillVO          $oBill
 	 * @return $this
 	 */
 	public function storeExternalBillId( $oPayoutVO, $oBill ) {
