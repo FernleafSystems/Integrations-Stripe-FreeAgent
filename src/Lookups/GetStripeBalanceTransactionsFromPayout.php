@@ -5,6 +5,7 @@ namespace FernleafSystems\Integrations\Stripe_Freeagent\Lookups;
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
 use Stripe\BalanceTransaction;
 use Stripe\Collection;
+use Stripe\Refund;
 
 /**
  * Class GetBalanceTransactionsFromPayout
@@ -58,8 +59,9 @@ class GetStripeBalanceTransactionsFromPayout {
 
 		// Now we remove any refunded charges TODO: assumes WHOLE charge refunds
 		foreach ( $aRefundedCharges as $oRefundTxn ) {
+			$oRefund = Refund::retrieve( $oRefundTxn->source );
 			foreach ( $aBalanceTxns as $nKey => $oBalTxn ) {
-				if ( $oRefundTxn->source == $oBalTxn->source ) {
+				if ( $oRefund->charge == $oBalTxn->source ) {
 					unset( $aBalanceTxns[ $nKey ] );
 				}
 			}
