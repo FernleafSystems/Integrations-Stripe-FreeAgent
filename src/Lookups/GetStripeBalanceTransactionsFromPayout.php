@@ -4,6 +4,7 @@ namespace FernleafSystems\Integrations\Stripe_Freeagent\Lookups;
 
 use FernleafSystems\Integrations\Stripe_Freeagent\Consumers\StripePayoutConsumer;
 use Stripe\BalanceTransaction;
+use Stripe\Charge;
 use Stripe\Collection;
 use Stripe\Refund;
 
@@ -29,28 +30,22 @@ class GetStripeBalanceTransactionsFromPayout {
 	public function retrieve() {
 		/** @var BalanceTransaction[] $aBalanceTxns */
 		$aBalanceTxns = array();
-
-		$nExpectedAmount = $this->getStripePayout()->amount;
-
 		/** @var BalanceTransaction[] $aRefundedCharges */
 		$aRefundedCharges = array();
 
 		$nTotalTally = 0;
-		$oBalTxn_Collection = $this->sendRequest();
-		/** @var BalanceTransaction $oTxn */
-		foreach ( $oBalTxn_Collection->autoPagingIterator() as $oTxn ) {
+		$nExpectedAmount = $this->getStripePayout()->amount;
 
-			// do not do 'payout' / 'transfer'
-			if ( in_array( $oTxn->type, array( 'charge', 'refund' ) ) ) {
-				$nTotalTally += $oTxn->net;
+		$oBalTxn_Charges = $this->getPayoutCharges();
+		foreach ( $oBalTxn_Charges->autoPagingIterator() as $oTxn ) {
+			$nTotalTally += $oTxn->net;
+			$aBalanceTxns[] = $oTxn;
+		}
 
-				if ( $oTxn->type == 'refund' ) {
-					$aRefundedCharges[] = $oTxn;
-				}
-				else if ( $oTxn->type == 'charge' ) {
-					$aBalanceTxns[] = $oTxn;
-				}
-			}
+		$oBalTxn_Refunds = $this->getPayoutRefunds();
+		foreach ( $oBalTxn_Refunds->autoPagingIterator() as $oTxn ) {
+			$nTotalTally += $oTxn->net;
+			$aRefundedCharges[] = $oTxn;
 		}
 
 		if ( $nTotalTally != $nExpectedAmount ) {
@@ -59,10 +54,23 @@ class GetStripeBalanceTransactionsFromPayout {
 
 		// Now we remove any refunded charges TODO: assumes WHOLE charge refunds
 		foreach ( $aRefundedCharges as $oRefundTxn ) {
-			$oRefund = Refund::retrieve( $oRefundTxn->source );
+
+			// with an older stripe API, we get CH_ instead of RE_ so we must load
+			// up the Charge and get the Refund objects from within it.
+			if ( strpos( $oRefundTxn->source, 'ch_' ) === 0 ) {
+				$oCH = Charge::retrieve( $oRefundTxn->source );
+				$aRefunds = $oCH->refunds;
+			}
+			else {
+				$aRefunds = array( Refund::retrieve( $oRefundTxn->source ) );
+			}
+
+			/** @var Refund[] $aRefunds */
 			foreach ( $aBalanceTxns as $nKey => $oBalTxn ) {
-				if ( $oRefund->charge == $oBalTxn->source ) {
-					unset( $aBalanceTxns[ $nKey ] );
+				foreach ( $aRefunds as $oRef ) {
+					if ( $oRef->charge == $oBalTxn->source ) {
+						unset( $aBalanceTxns[ $nKey ] );
+					}
 				}
 			}
 		}
@@ -84,6 +92,21 @@ class GetStripeBalanceTransactionsFromPayout {
 			$aParams
 		);
 		return BalanceTransaction::all( $aRequest );
+	}
+
+	/**
+	 * @param array $aParams
+	 * @return Collection
+	 */
+	protected function getPayoutCharges() {
+		return $this->sendRequest( [ 'type' => 'charge' ] );
+	}
+
+	/**
+	 * @return Collection
+	 */
+	protected function getPayoutRefunds() {
+		return $this->sendRequest( [ 'type' => 'refund' ] );
 	}
 
 	/**
