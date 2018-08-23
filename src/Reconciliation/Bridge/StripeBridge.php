@@ -8,22 +8,23 @@ use FernleafSystems\Integrations\Stripe_Freeagent\Lookups\GetStripeBalanceTransa
 use Stripe\BalanceTransaction;
 use Stripe\Charge;
 use Stripe\Payout;
+use Stripe\Refund;
 
 abstract class StripeBridge implements Freeagent\Reconciliation\Bridge\BridgeInterface {
 
 	/**
 	 * This needs to be extended to add the Invoice Item details.
-	 * @param string $sTxnID a Stripe Charge ID
+	 * @param string $sChargeId a Stripe Charge ID
 	 * @return Freeagent\DataWrapper\ChargeVO
 	 * @throws \Exception
 	 */
-	public function buildChargeFromTransaction( $sTxnID ) {
+	public function buildChargeFromTransaction( $sChargeId ) {
 		$oCharge = new Freeagent\DataWrapper\ChargeVO();
 
-		$oStripeCharge = Charge::retrieve( $sTxnID );
+		$oStripeCharge = Charge::retrieve( $sChargeId );
 		$oBalTxn = BalanceTransaction::retrieve( $oStripeCharge->balance_transaction );
 
-		return $oCharge->setId( $sTxnID )
+		return $oCharge->setId( $sChargeId )
 					   ->setGateway( 'stripe' )
 					   ->setPaymentTerms( 14 )
 					   ->setAmount_Gross( $oBalTxn->amount/100 )
@@ -31,6 +32,27 @@ abstract class StripeBridge implements Freeagent\Reconciliation\Bridge\BridgeInt
 					   ->setAmount_Net( $oBalTxn->net/100 )
 					   ->setDate( $oStripeCharge->created )
 					   ->setCurrency( $oStripeCharge->currency );
+	}
+
+	/**
+	 * This needs to be extended to add the Invoice Item details.
+	 * @param string $sRefundId a Stripe Refund ID
+	 * @return Freeagent\DataWrapper\RefundVO
+	 * @throws \Exception
+	 */
+	public function buildRefundFromId( $sRefundId ) {
+		$oRefund = new Freeagent\DataWrapper\RefundVO();
+
+		$oStrRefund = Refund::retrieve( $sRefundId );
+		$oBalTxn = BalanceTransaction::retrieve( $oStrRefund->balance_transaction );
+
+		return $oRefund->setId( $sRefundId )
+					   ->setGateway( 'stripe' )
+					   ->setAmount_Gross( $oBalTxn->amount/100 )
+					   ->setAmount_Fee( $oBalTxn->fee/100 )
+					   ->setAmount_Net( $oBalTxn->net/100 )
+					   ->setDate( $oStrRefund->created )
+					   ->setCurrency( $oStrRefund->currency );
 	}
 
 	/**
@@ -44,7 +66,12 @@ abstract class StripeBridge implements Freeagent\Reconciliation\Bridge\BridgeInt
 		$oStripePayout = Payout::retrieve( $sPayoutId );
 		try {
 			foreach ( $this->getStripeBalanceTransactions( $oStripePayout ) as $oBalTxn ) {
-				$oPayout->addCharge( $this->buildChargeFromTransaction( $oBalTxn->source ) );
+				if ( $oBalTxn->type == 'charge' ) {
+					$oPayout->addCharge( $this->buildChargeFromTransaction( $oBalTxn->source ) );
+				}
+				else if ( $oBalTxn->type == 'refund' ) {
+					$oPayout->addRefund( $this->buildRefundFromId( $oBalTxn->source ) );
+				}
 			}
 		}
 		catch ( \Exception $oE ) {
