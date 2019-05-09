@@ -94,7 +94,7 @@ abstract class StripeBridge implements Freeagent\Reconciliation\Bridge\BridgeInt
 				->retrieve();
 		}
 		catch ( \Exception $oE ) {
-			$aBalTxns = array();
+			$aBalTxns = [];
 		}
 		return $aBalTxns;
 	}
