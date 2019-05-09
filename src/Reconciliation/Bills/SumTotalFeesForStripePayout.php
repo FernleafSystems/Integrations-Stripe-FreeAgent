@@ -16,11 +16,11 @@ class SumTotalFeesForStripePayout {
 	public function count() {
 
 		$oFeeCollection = BalanceTransaction::all(
-			array(
+			[
 				'payout' => $this->getStripePayout()->id,
 				'type'   => 'charge',
 				'limit'  => 20
-			)
+			]
 		);
 
 		$nTotalFees = 0;

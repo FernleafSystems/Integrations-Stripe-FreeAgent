@@ -29,9 +29,9 @@ class GetStripeBalanceTransactionsFromPayout {
 	 */
 	public function retrieve() {
 		/** @var BalanceTransaction[] $aChargeTxns */
-		$aChargeTxns = array();
+		$aChargeTxns = [];
 		/** @var BalanceTransaction[] $aRefundedCharges */
-		$aRefundedCharges = array();
+		$aRefundedCharges = [];
 		/** @var BalanceTransaction $oBalTxn */
 
 		$nTotalTally = 0;
@@ -73,7 +73,7 @@ class GetStripeBalanceTransactionsFromPayout {
 					$aRefunds = $oCH->refunds;
 				}
 				else {
-					$aRefunds = array( Refund::retrieve( $oRefundTxn->source ) );
+					$aRefunds = [ Refund::retrieve( $oRefundTxn->source ) ];
 				}
 
 				/** @var Refund[] $aRefunds */
@@ -95,13 +95,13 @@ class GetStripeBalanceTransactionsFromPayout {
 	 * @param array $aParams
 	 * @return Collection
 	 */
-	protected function sendRequest( $aParams = array() ) {
+	protected function sendRequest( $aParams = [] ) {
 		$aRequest = array_merge(
-			array(
+			[
 				'payout' => $this->getStripePayout()->id,
 				//				'type'   => $this->getTransactionType(),
 				'limit'  => 20
-			),
+			],
 			$aParams
 		);
 		return BalanceTransaction::all( $aRequest );
