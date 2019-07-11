@@ -58,6 +58,7 @@ abstract class StripeBridge implements Freeagent\Reconciliation\Bridge\BridgeInt
 	/**
 	 * @param string $sPayoutId
 	 * @return Freeagent\DataWrapper\PayoutVO
+	 * @throws \Exception
 	 */
 	public function buildPayoutFromId( $sPayoutId ) {
 		$oPayout = new Freeagent\DataWrapper\PayoutVO();
@@ -75,6 +76,12 @@ abstract class StripeBridge implements Freeagent\Reconciliation\Bridge\BridgeInt
 			}
 		}
 		catch ( \Exception $oE ) {
+		}
+
+		$nCompareTotal = (int)( $oPayout->getTotalNet()*100 );
+		if ( $oStripePayout->amount != $nCompareTotal ) {
+			throw new \Exception( sprintf( 'PayoutVO total (%s) differs from Stripe total (%s)',
+				$nCompareTotal, $oStripePayout->amount ) );
 		}
 
 		$oPayout->setDateArrival( $oStripePayout->arrival_date )
