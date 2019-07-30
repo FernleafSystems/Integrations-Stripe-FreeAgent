@@ -24,12 +24,12 @@ abstract class StripeBridge implements Freeagent\Reconciliation\Bridge\BridgeInt
 		$oStripeCharge = Charge::retrieve( $sChargeId );
 		$oBalTxn = BalanceTransaction::retrieve( $oStripeCharge->balance_transaction );
 
-		return $oCharge->setId( $sChargeId )
-					   ->setGateway( 'stripe' )
-					   ->setPaymentTerms( 14 )
-					   ->setAmount_Gross( $oBalTxn->amount/100 )
-					   ->setAmount_Fee( $oBalTxn->fee/100 )
-					   ->setAmount_Net( $oBalTxn->net/100 )
+		$oCharge->id = $sChargeId;
+		$oCharge->gateway = 'stripe';
+		return $oCharge->setPaymentTerms( 14 )
+					   ->setAmount_Gross( bcdiv( $oBalTxn->amount, 100, 2 ) )
+					   ->setAmount_Fee( bcdiv( $oBalTxn->fee, 100, 2 ) )
+					   ->setAmount_Net( bcdiv( $oBalTxn->net, 100, 2 ) )
 					   ->setDate( $oStripeCharge->created )
 					   ->setCurrency( $oStripeCharge->currency );
 	}
@@ -48,9 +48,9 @@ abstract class StripeBridge implements Freeagent\Reconciliation\Bridge\BridgeInt
 
 		return $oRefund->setId( $sRefundId )
 					   ->setGateway( 'stripe' )
-					   ->setAmount_Gross( $oBalTxn->amount/100 )
-					   ->setAmount_Fee( $oBalTxn->fee/100 )
-					   ->setAmount_Net( $oBalTxn->net/100 )
+					   ->setAmount_Gross( bcdiv( $oBalTxn->amount, 100, 2 ) )
+					   ->setAmount_Fee( bcdiv( $oBalTxn->fee, 100, 2 ) )
+					   ->setAmount_Net( bcdiv( $oBalTxn->net, 100, 2 ) )
 					   ->setDate( $oStrRefund->created )
 					   ->setCurrency( $oStrRefund->currency );
 	}
@@ -78,8 +78,8 @@ abstract class StripeBridge implements Freeagent\Reconciliation\Bridge\BridgeInt
 		catch ( \Exception $oE ) {
 		}
 
-		$nCompareTotal = (int)( $oPayout->getTotalNet()*100 );
-		if ( $oStripePayout->amount != $nCompareTotal ) {
+		$nCompareTotal = bcmul( $oPayout->getTotalNet(), 100, 0 );
+		if ( bccomp( $oStripePayout->amount, $nCompareTotal ) ) {
 			throw new \Exception( sprintf( 'PayoutVO total (%s) differs from Stripe total (%s)',
 				$nCompareTotal, $oStripePayout->amount ) );
 		}
