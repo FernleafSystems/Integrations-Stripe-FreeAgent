@@ -19,8 +19,8 @@
   "require":      {
     "php":                                    ">=5.6.0",
     "ext-bcmath":                             "*",
-    "fernleafsystems/integrations-freeagent": "~0.1.0",
-    "stripe/stripe-php":                      "^6.0.0"
+    "fernleafsystems/integrations-freeagent": "~0.1.5",
+    "stripe/stripe-php":                      "^6.43.0"
   },
   "require-dev":  {
   },
