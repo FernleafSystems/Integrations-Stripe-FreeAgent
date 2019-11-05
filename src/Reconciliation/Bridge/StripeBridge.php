@@ -12,6 +12,8 @@ use Stripe\Refund;
 
 abstract class StripeBridge implements Freeagent\Reconciliation\Bridge\BridgeInterface {
 
+	use Freeagent\Consumers\FreeagentConfigVoConsumer;
+
 	/**
 	 * This needs to be extended to add the Invoice Item details.
 	 * @param string $sChargeId a Stripe Charge ID
@@ -26,11 +28,11 @@ abstract class StripeBridge implements Freeagent\Reconciliation\Bridge\BridgeInt
 
 		$oCharge->id = $sChargeId;
 		$oCharge->gateway = 'stripe';
-		return $oCharge->setPaymentTerms( 14 )
-					   ->setAmount_Gross( bcdiv( $oBalTxn->amount, 100, 2 ) )
+		$oCharge->date = $oStripeCharge->created;
+		$oCharge->payment_terms = $this->getFreeagentConfigVO()->invoice_payment_terms;
+		return $oCharge->setAmount_Gross( bcdiv( $oBalTxn->amount, 100, 2 ) )
 					   ->setAmount_Fee( bcdiv( $oBalTxn->fee, 100, 2 ) )
 					   ->setAmount_Net( bcdiv( $oBalTxn->net, 100, 2 ) )
-					   ->setDate( $oStripeCharge->created )
 					   ->setCurrency( $oStripeCharge->currency );
 	}
 
